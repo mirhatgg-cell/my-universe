@@ -89,7 +89,7 @@
       config.journey === "auto" ? ThemeScenes.select(config) : null;
     if (themed) types = [...themed, "name"];
     const packed = AnimationPacks.select(config);
-    if (packed) types = [...packed, "name"];
+    if (packed) types = [...packed];
     const personalType =
       config.holiday === "memorial"
         ? "theme:candle"
@@ -116,7 +116,12 @@
       section.className = "journey-chapter";
       const eyebrow = document.createElement("p");
       eyebrow.className = "eyebrow";
-      eyebrow.textContent = "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
+      eyebrow.textContent = type.startsWith("pack:")
+        ? "АНИМАЦИЯ " +
+          (i + 1) +
+          " / 3 · " +
+          ["ОБЪЕМ", "РИСУНОК", "БУМАГА"][Number(type.split(":")[3])]
+        : "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
       const h = document.createElement("h2");
       h.textContent = personal ? "От меня — тебе" : sceneCopy[0];
       const text = document.createElement("p");
@@ -128,6 +133,8 @@
       stage.setAttribute("aria-label", sceneCopy[2]);
       const canvas = document.createElement("canvas");
       canvas.setAttribute("aria-hidden", "true");
+      if (type.startsWith("pack:"))
+        canvas.dataset.sceneIndex = type.split(":")[3];
       stage.append(canvas);
       const hint = document.createElement("p");
       hint.className = "journey-hint";
@@ -274,6 +281,27 @@
       });
       states.push(state);
     });
+    if (packed) {
+      const nav = document.createElement("nav");
+      nav.className = "journey-nav";
+      nav.setAttribute("aria-label", "Перейти к анимации");
+      for (let j = 0; j < 3; j++) {
+        const target = states.find((s) => s.type === packed[j]);
+        if (!target) continue;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "secondary";
+        button.textContent = ["1 · Объем", "2 · Рисунок", "3 · Бумага"][j];
+        button.title = AnimationPacks.info(packed[j])[0];
+        button.onclick = () =>
+          target.section.scrollIntoView({
+            behavior: Universe.reduced ? "auto" : "smooth",
+            block: "start",
+          });
+        nav.append(button);
+      }
+      root.prepend(nav);
+    }
     document.querySelector(".letter-section").after(root);
     if ("IntersectionObserver" in window) {
       observer = new IntersectionObserver(
@@ -345,7 +373,8 @@
         ),
       );
     g.save();
-    g.translate(s.x * 18, s.y * 12);
+    if (!s.type.startsWith("pack:") || s.type.endsWith(":1"))
+      g.translate(s.x * 18, s.y * 12);
     g.shadowBlur = 12;
     g.shadowColor = "#a889ff";
     if (s.type.startsWith("pack:")) AnimationPacks.draw(s, t);

@@ -1,9 +1,34 @@
 (() => {
   "use strict";
   const pattern =
-    /(?<![\p{L}])(тепл[а-яё]*|добр[а-яё]*|рядом|вместе|друж[а-яё]*|поддерж[а-яё]*|забот[а-яё]*|мечт[а-яё]*|смел[а-яё]*|шаг[а-яё]*|люблю|любов[а-яё]*|нежн[а-яё]*|уваж[а-яё]*|собой|встретились)(?![\p{L}])/giu;
+    /(?<![\p{L}])(тепл[а-яё]*|добр[а-яё]*|рядом|вместе|друж[а-яё]*|поддерж[а-яё]*|забот[а-яё]*|мечт[а-яё]*|смел[а-яё]*|шаг[а-яё]*|люблю|любов[а-яё]*|нежн[а-яё]*|уваж[а-яё]*|собой|встретились|свет[а-яё]*|сия[а-яё]*|раст[а-яё]*|рост[а-яё]*|жизн[а-яё]*|начал[а-яё]*|спокой[а-яё]*|памят[а-яё]*)(?![\p{L}])/giu;
+  const textObserver =
+    "IntersectionObserver" in window
+      ? new IntersectionObserver(
+          (entries) => {
+            for (const e of entries)
+              if (e.isIntersecting) {
+                e.target.classList.add("word-seen");
+                textObserver.unobserve?.(e.target);
+              }
+          },
+          { threshold: 0.2 },
+        )
+      : null;
+  function effect(word) {
+    return /^(свет|сия|тепл)/iu.test(word)
+      ? "light"
+      : /^(раст|рост|жизн|мечт)/iu.test(word)
+        ? "grow"
+        : /^(рядом|вместе|встрет|друж)/iu.test(word)
+          ? "join"
+          : /^(шаг|начал|смел)/iu.test(word)
+            ? "step"
+            : "soft";
+  }
   // Decorate text in place; never wrap or move another module's elements.
   document.addEventListener("letter-rendered", () => {
+    textObserver?.disconnect();
     document
       .querySelectorAll(
         "#letter-body p,#intro,#reason1,#reason2,#reason3,#closing,[data-note]",
@@ -17,6 +42,9 @@
           const span = document.createElement("em");
           span.className = "story-word";
           span.textContent = m[0];
+          span.dataset.effect = effect(m[0]);
+          if (textObserver) textObserver.observe(span);
+          else span.classList.add("word-seen");
           frag.append(span);
           end = m.index + m[0].length;
         }
