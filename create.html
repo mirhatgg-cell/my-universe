@@ -1,15 +1,246 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070812"><meta name="description" content="Среди миллиардов звёзд есть человек, которому адресована эта маленькая Вселенная. Тебе."><title>Мастерская личных писем</title><link rel="stylesheet" href="style.css"></head>
-<body data-page="author"><canvas id="cosmos" aria-hidden="true"></canvas><div class="nebula nebula-a" aria-hidden="true"></div><div class="nebula nebula-b" aria-hidden="true"></div><div id="progress"></div><div id="particles" aria-hidden="true"></div>
-<header><div class="brand" aria-label="Твоя маленькая Вселенная, начало"><span class="brand-symbol">✧</span><span class="brand-text">твоя маленькая<br><b>ВСЕЛЕННАЯ</b></span></div><span class="header-note">КОСМОС БЛИЖЕ, ЧЕМ КАЖЕТСЯ</span><div class="header-actions"><button class="text-button fullscreen-button" id="fullscreen" aria-pressed="false"><span aria-hidden="true">⛶</span> <span class="fs-label">На весь экран</span></button><button class="motion-toggle" id="motion-toggle" aria-pressed="false" aria-label="Приостановить анимацию">◌ <span>Движение</span></button></div></header>
-<section id="missing-letter" hidden><div class="eyebrow">ПОСЛАНИЕ ДЛЯ ОДНОГО ЧЕЛОВЕКА</div><h1>У каждой звезды<br><em>своё письмо.</em></h1><p id="missing-message">Открой полную личную ссылку, которую тебе отправили.</p><span aria-hidden="true">✧</span></section><div class="author-toolbar"><span>Твоя мастерская · получатель эту панель не увидит</span><button class="primary" id="edit">Подготовить личное письмо ↗</button></div><main hidden><section class="hero" id="home"><div class="planet-scene" id="planet-scene"><div class="planet-fallback" aria-hidden="true"><div></div></div><canvas id="planet" aria-hidden="true"></canvas><div class="planet-caption"><span>ОДНА ИЗ МИЛЛИАРДОВ ЗВЁЗД</span><b>Но это послание — только тебе.</b></div></div><div class="hero-content"><div class="eyebrow"><span class="live-dot"></span><span id="dedication">ЛИЧНОЕ ПОСЛАНИЕ ЧЕРЕЗ ВСЕЛЕННУЮ</span></div><h1><span id="recipient">Есть люди,</span><br><em id="headline">с которыми теплее.</em></h1><p class="lead" id="intro">И ты — один из них. Здесь несколько слов, которые<br class="desktop"> иногда трудно сказать вслух. Но очень хочется.</p>
-<button class="envelope" id="open" aria-label="Открыть письмо"><span class="letter-peek">сигнал из самого сердца<br><b>для тебя ♡</b></span><span class="envelope-halo" aria-hidden="true"></span><span class="envelope-back"></span><span class="flap"></span><span class="envelope-front"></span><span class="stamp">♡</span><span class="postmark">ОТ СЕРДЦА<br>ДО ЗВЁЗД</span></button><div class="handwriting" id="open-hint">открой своё послание <span>⤴</span></div><button class="replay-envelope" id="replay-envelope" hidden>↻ Ещё раз открыть конверт</button><p class="small-note">Это послание существует, потому что есть ты.</p></div><a class="scroll-link" href="#letter">Твоё путешествие начинается здесь <span>↓</span></div><span class="hero-star star-a" aria-hidden="true">✧</span><span class="hero-star star-b" aria-hidden="true">✳</span></section>
-
-<div id="story" hidden><section class="letter-section reveal" id="letter"><div class="margin-note">01 / сигнал от сердца</div><article class="paper"><span class="paper-flower" aria-hidden="true">✳</span><div class="eyebrow" id="letter-label">БЕЗ ПОВОДА. ОТ ВСЕГО СЕРДЦА.</div><h2 id="salutation">Знаешь что?</h2><div id="letter-body"></div><div class="signature">С теплом,<br><span id="sender">человек, который тебя ценит</span><span class="signature-heart">♡</span></div></article></section>
-<section class="reasons reveal"><div class="eyebrow">02 / ТВОЁ ПРИТЯЖЕНИЕ</div><h2>Мир лучше,<br>потому что <em>в нём есть ты.</em></h2><div class="reason-grid"><article><span>01</span><div class="reason-icon">☼</div><h3>С тобой светлее</h3><p id="reason1"></p></article><article><span>02</span><div class="reason-icon">✧</div><h3>Ты — это ты</h3><p id="reason2"></p></article><article><span>03</span><div class="reason-icon">♡</div><h3>Это многое значит</h3><p id="reason3"></p></article></div></section>
-<section class="wish-section reveal"><div class="wish-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="sun">☼</span><span class="little-star">✦</span><span class="tiny-heart">♡</span></div><div class="wish-copy"><div class="eyebrow">03 / НА ОРБИТЕ ХОРОШЕГО</div><h2>Пусть у тебя<br><em>будет…</em></h2><ul><li><span>✦</span> Утро, ради которого хочется просыпаться.</li><li><span>✦</span> Люди, рядом с которыми можно быть собой.</li><li><span>✦</span> Смелость пробовать — и право передумать.</li><li><span>✦</span> Время на то, что заставляет глаза сиять.</li><li><span>✦</span> И тихое чувство: «Я на своём месте».</li></ul></div></section>
-<section class="pocket-section reveal"><div class="eyebrow">04 / КАРМАННЫЕ СОЗВЕЗДИЯ</div><h2>Ещё три мысли.<br><em>Они — для тебя.</em></h2><p>Просто читай. Всё важное появится само.</p><div class="notes"><article class="note narrative-note"><h3>Для трудного дня</h3><p data-note="0"></p></article><article class="note narrative-note"><h3>Для новой мечты</h3><p data-note="1"></p></article><article class="note narrative-note"><h3>Просто так</h3><p data-note="2"></p></article></div></section>
-<section class="final-section reveal"><span class="eyebrow">05 / МОЯ ЛЮБИМАЯ ТОЧКА ВО ВСЕЛЕННОЙ</span><h2>Как хорошо,<br>что ты <em>есть.</em></h2><p id="closing">Пусть это письмо будет маленьким напоминанием:<br>в этом большом мире есть человек, которому ты дорог.</p><button class="primary" id="hug">Зажечь свою сверхновую <span>♡</span></button><p id="hug-message" aria-live="polite">Нажми — пусть Вселенная улыбнётся тебе.</p><div class="end-flower" aria-hidden="true">✳</div></section></div>
-</main><footer hidden><div class="brand"><span class="brand-symbol">✧</span><span class="brand-text">твоя маленькая<br><b>ВСЕЛЕННАЯ</b></span></div><p>Расстояния огромны. Тепло доходит.</p></footer>
-
-<div id="view-status" role="status" hidden></div><dialog id="editor"><form id="form"><div class="dialog-head"><div><span class="eyebrow">ТВОЯ ЛИЧНАЯ ВСЕЛЕННАЯ</span><h2>Твоё <em>письмо.</em></h2></div><button type="button" id="close" class="close" aria-label="Закрыть">×</button></div><p class="form-intro">Несколько деталей — и это уже ваша история.</p><div class="form-row"><label>Кому<input id="to-input" required maxlength="45" placeholder="Например, Алина"></label><label>От кого<input id="from-input" required maxlength="60" placeholder="Твоё имя"></label></div><div class="form-row"><label>Повод<select id="holiday-input"></select></label><label>Что хочется выразить<select id="tone-input"><option value="friend">Дружбу</option><option value="love">Любовь</option><option value="respect">Уважение</option></select></label></div><label>Анимационная история<select id="journey-input"><option value="auto">Подобрать по поводу и отношению</option><option value="love">Для любимой — орбиты, дерево, сердце, цветок, имя</option><option value="birthday">Сюрприз — подарок, дерево, цветок, имя</option><option value="gentle">Тёплая история — орбиты, дерево, цветок, имя</option></select></label><label>Твои личные слова <span class="optional">необязательно</span><textarea id="message-input" maxlength="1800" rows="5" placeholder="Что ты особенно ценишь в этом человеке? Или вспомни момент, который согревает тебя до сих пор…"></textarea></label><label>Что показывать вместе с твоими словами<select id="scene-input"><option value="together">Встреча — две звезды находят друг друга</option><option value="warmth">Тепло — твой свет меняет мой день</option><option value="support">Поддержка — подхватить и помочь подняться</option><option value="dream">Мечта — шаги превращаются в дорогу</option><option value="love">Любовь — вместе, сохраняя свой свет</option><option value="respect">Уважение — можно быть разными</option></select></label><p class="form-tip">Личные слова появятся внутри письма. Текст хранится в самой ссылке: его сможет прочитать любой, кому её перешлют.</p><button type="submit" class="primary full">Посмотреть глазами получателя <span>↗</span></button><button type="button" id="share" class="secondary full">Скопировать ссылку для отправки</button><div id="share-result" hidden><label>Твоя ссылка<input id="share-url" readonly></label></div><p id="status" role="status"></p></form></dialog><script src="app.js"></script><script src="cosmos.js"></script><script src="feelings.js"></script><script src="journey.js"></script></body></html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#080913" />
+    <title>Твоя маленькая Вселенная</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css?v=4" />
+  </head>
+  <body data-page="author">
+    <canvas id="cosmos" aria-hidden="true"></canvas>
+    <div id="progress" aria-hidden="true"></div>
+    <header>
+      <div class="brand">
+        ✧ <span>Твоя маленькая<br /><b>ВСЕЛЕННАЯ</b></span>
+      </div>
+      <div class="header-actions">
+        <button
+          type="button"
+          id="fullscreen"
+          class="text-button"
+          aria-pressed="false"
+        >
+          ⛶ <span class="fs-label">На весь экран</span></button
+        ><button
+          type="button"
+          id="motion-toggle"
+          class="text-button"
+          aria-pressed="false"
+        >
+          ◌ Движение
+        </button>
+      </div>
+    </header>
+    <div class="author-toolbar">
+      <span>Мастерская · получатель видит только своё письмо</span
+      ><button type="button" id="edit" class="text-button">
+        К настройкам ↑
+      </button>
+    </div>
+    <section
+      id="editor"
+      class="inline-editor"
+      aria-label="Мастерская поздравлений"
+    >
+      <form id="form">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">ТВОЯ ЛИЧНАЯ ВСЕЛЕННАЯ</span>
+            <h2>Твоё <em>письмо.</em></h2>
+          </div>
+        </div>
+        <p class="form-intro">
+          Создай письмо, посмотри его ниже и отправь получателю персональную
+          ссылку.
+        </p>
+        <div class="form-row">
+          <label
+            >Кому<input
+              id="to-input"
+              required
+              maxlength="45"
+              placeholder="Например, Алина" /></label
+          ><label
+            >От кого<input
+              id="from-input"
+              required
+              maxlength="60"
+              placeholder="Твоё имя"
+          /></label>
+        </div>
+        <div class="form-row">
+          <label>Повод<select id="holiday-input"></select></label
+          ><label
+            >Что хочется выразить<select id="tone-input">
+              <option value="friend">Дружбу</option>
+              <option value="love">Любовь</option>
+              <option value="respect">Уважение</option>
+            </select></label
+          >
+        </div>
+        <label
+          >Анимационная история<select id="journey-input">
+            <option value="auto">Подобрать по поводу и отношению</option>
+            <option value="love">
+              Для любимой — орбиты, дерево, сердце, цветок, имя
+            </option>
+            <option value="birthday">
+              Сюрприз — подарок, дерево, цветок, имя
+            </option>
+            <option value="gentle">
+              Тёплая история — орбиты, дерево, цветок, имя
+            </option>
+          </select></label
+        ><label
+          >Твои личные слова <span class="optional">необязательно</span
+          ><textarea
+            id="message-input"
+            maxlength="1800"
+            rows="5"
+            placeholder="Что ты особенно ценишь в этом человеке? Или вспомни момент, который согревает тебя до сих пор…"
+          ></textarea></label
+        ><label
+          >Что показывать вместе с твоими словами<select id="scene-input">
+            <option value="together">
+              Встреча — две звезды находят друг друга
+            </option>
+            <option value="warmth">Тепло — твой свет меняет мой день</option>
+            <option value="support">
+              Поддержка — подхватить и помочь подняться
+            </option>
+            <option value="dream">Мечта — шаги превращаются в дорогу</option>
+            <option value="love">Любовь — вместе, сохраняя свой свет</option>
+            <option value="respect">Уважение — можно быть разными</option>
+          </select></label
+        >
+        <p class="form-tip">
+          Личные слова появятся внутри письма. Текст хранится в самой ссылке:
+          его сможет прочитать любой, кому её перешлют.
+        </p>
+        <button type="submit" class="primary full">
+          Посмотреть глазами получателя <span>↓</span></button
+        ><button type="button" id="share" class="secondary full">
+          Скопировать ссылку для отправки
+        </button>
+        <div id="share-result" hidden>
+          <label>Твоя ссылка<input id="share-url" readonly /></label>
+        </div>
+        <p id="status" role="status"></p>
+        <button type="button" id="open-preview" class="secondary full" hidden>
+          Открыть готовое поздравление отдельно ↗
+        </button>
+      </form>
+    </section>
+    <section id="missing-letter" hidden>
+      <p class="eyebrow">ПОСЛАНИЕ ДЛЯ ОДНОГО ЧЕЛОВЕКА</p>
+      <h1>У каждой звезды<br /><em>своё письмо.</em></h1>
+      <p id="missing-message">
+        Открой полную личную ссылку, которую тебе отправили.
+      </p>
+    </section>
+    <main hidden>
+      <section class="hero" id="home">
+        <div class="planet-scene" id="planet-scene" aria-hidden="true">
+          <div class="planet-fallback"></div>
+          <canvas id="planet"></canvas>
+        </div>
+        <div class="hero-content">
+          <p class="eyebrow" id="dedication"></p>
+          <h1><span id="recipient"></span><br /><em id="headline"></em></h1>
+          <p class="lead" id="intro"></p>
+          <button type="button" id="start-story" class="primary">
+            Начать твою историю ↓
+          </button>
+        </div>
+      </section>
+      <div id="story">
+        <section class="letter-section" id="letter">
+          <article class="paper">
+            <p class="eyebrow" id="letter-label"></p>
+            <h2 id="salutation"></h2>
+            <div id="letter-body"></div>
+            <div class="signature">
+              С теплом,<br /><span id="sender"></span>
+            </div>
+          </article>
+        </section>
+        <section class="reasons">
+          <p class="eyebrow">ТО, ЧТО ХОЧЕТСЯ СКАЗАТЬ</p>
+          <h2>Мир лучше,<br />потому что <em>в нём есть ты.</em></h2>
+          <div class="reason-grid">
+            <article>
+              <h3>С тобой светлее</h3>
+              <p id="reason1"></p>
+            </article>
+            <article>
+              <h3>Ты — это ты</h3>
+              <p id="reason2"></p>
+            </article>
+            <article>
+              <h3>Это многое значит</h3>
+              <p id="reason3"></p>
+            </article>
+          </div>
+        </section>
+        <section class="wish-section">
+          <p class="eyebrow">НА ОРБИТЕ ХОРОШЕГО</p>
+          <h2>Пусть у тебя <em>будет…</em></h2>
+          <div class="wish-copy">
+            <ul>
+              <li>Утро, ради которого хочется просыпаться.</li>
+              <li>Люди, рядом с которыми можно быть собой.</li>
+              <li>Смелость пробовать — и право передумать.</li>
+              <li>Время на то, что заставляет глаза сиять.</li>
+              <li>Тихое чувство: «Я на своём месте».</li>
+            </ul>
+          </div>
+        </section>
+        <section class="pocket-section">
+          <p class="eyebrow">КАРМАННЫЕ СОЗВЕЗДИЯ</p>
+          <h2>Ещё три мысли.<br /><em>Они — для тебя.</em></h2>
+          <div class="notes">
+            <article>
+              <h3>Для трудного дня</h3>
+              <p data-note="0"></p>
+            </article>
+            <article>
+              <h3>Для новой мечты</h3>
+              <p data-note="1"></p>
+            </article>
+            <article>
+              <h3>Просто так</h3>
+              <p data-note="2"></p>
+            </article>
+          </div>
+        </section>
+        <section class="final-section">
+          <p class="eyebrow">ТВОЙ СВЕТ ДОХОДИТ</p>
+          <h2>Как хорошо,<br />что ты <em>есть.</em></h2>
+          <p id="closing"></p>
+          <button type="button" class="primary" id="hug">
+            Зажечь свою сверхновую ✦
+          </button>
+          <p id="hug-message" role="status">
+            Нажми — пусть Вселенная улыбнётся тебе.
+          </p>
+        </section>
+      </div>
+    </main>
+    <footer hidden><p>Расстояния огромны. Тепло доходит.</p></footer>
+    <div id="view-status" role="status" hidden></div>
+    <noscript
+      ><p class="noscript-note">
+        Для интерактивного поздравления включи JavaScript в браузере.
+      </p></noscript
+    >
+    <script src="runtime.js?v=4"></script>
+    <script src="messages.js?v=4"></script>
+    <script src="feelings.js?v=4"></script>
+    <script src="journey.js?v=4"></script>
+    <script src="cosmos.js?v=4"></script>
+    <script src="supernova.js?v=4"></script>
+    <script src="app.js?v=4"></script>
+  </body>
+</html>

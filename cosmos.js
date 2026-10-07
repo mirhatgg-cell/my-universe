@@ -1,20 +1,30 @@
-/* A small procedural universe. No libraries, textures or paid services. */
-(()=>{
-'use strict';
-const reduce=matchMedia('(prefers-reduced-motion: reduce)');
-let paused=reduce.matches,visible=!document.hidden,frameId=0,last=0,time=0,force=true;
-const button=document.getElementById('motion-toggle');
-function updateButton(){document.body.classList.toggle('paused',paused);button.setAttribute('aria-pressed',String(paused));button.setAttribute('aria-label',paused?'Включить анимацию':'Приостановить анимацию');button.title=paused?'Включить анимацию':'Приостановить анимацию';}
-button.onclick=()=>{paused=!paused;force=true;updateButton();schedule()};reduce.addEventListener('change',()=>{paused=reduce.matches;updateButton();force=true;schedule()});updateButton();
-let width=innerWidth,height=innerHeight,px=0,py=0,targetX=0,targetY=0;
-const canvas=document.getElementById('cosmos'),ctx=canvas.getContext('2d');
-let stars=[];let meteors=[];let nextMeteor=3;const palettes=['184,201,255','199,161,255','128,227,233','255,207,231'];
-function resizeStars(){width=innerWidth;height=innerHeight;const dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);if(ctx)ctx.setTransform(dpr,0,0,dpr,0,0);stars=Array.from({length:width<700?140:280},()=>({x:(Math.random()-.5)*width*2.6,y:(Math.random()-.5)*height*2.6,z:.35+Math.random()*1.8,size:.4+Math.random()*1.2,phase:Math.random()*6.28,color:palettes[Math.floor(Math.random()*palettes.length)]}));force=true;schedule()}
-function drawStars(t,dt){if(!ctx)return;ctx.clearRect(0,0,width,height);for(const s of stars){const x=width/2+(s.x-px*15)/s.z,y=height/2+(s.y-py*12)/s.z;const a=.22+.58*(.5+.5*Math.sin(t*.55+s.phase));if(x<0||x>width||y<0||y>height)continue;ctx.fillStyle=`rgba(${s.color},${a})`;ctx.beginPath();ctx.arc(x,y,s.size/s.z,0,Math.PI*2);ctx.fill();if(s.size>1.3&&s.z<.8){ctx.strokeStyle=`rgba(${s.color},${a*.35})`;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(x-5,y);ctx.lineTo(x+5,y);ctx.moveTo(x,y-5);ctx.lineTo(x,y+5);ctx.stroke()}}
-if(!paused&&t>nextMeteor){meteors.push({x:width*(.1+Math.random()*.9),y:Math.random()*height*.3,life:0});nextMeteor=t+7+Math.random()*10}meteors=meteors.filter(m=>m.life<1.4);for(const m of meteors){m.life+=dt;const x=m.x-m.life*330,y=m.y+m.life*160;const a=Math.sin(Math.min(1,m.life/1.4)*Math.PI);const g=ctx.createLinearGradient(x,y,x+110,y-53);g.addColorStop(0,`rgba(206,196,255,${a})`);g.addColorStop(1,'rgba(170,129,255,0)');ctx.strokeStyle=g;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+110,y-53);ctx.stroke()}}
-const pc=document.getElementById('planet'),scene=document.getElementById('planet-scene');let gl=null,program=null,uniforms={},planetInView=true;
-const vertex=`attribute vec2 aPosition;void main(){gl_Position=vec4(aPosition,0.,1.);}`;
-const fragment=`precision mediump float;
+(() => {
+  "use strict";
+  const canvas = document.getElementById("cosmos");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  let width = 0,
+    height = 0,
+    dpr = 0,
+    time = 0,
+    stars = [],
+    meteors = [],
+    nextMeteor = 4,
+    dirty = true,
+    px = 0,
+    py = 0,
+    targetX = 0,
+    targetY = 0;
+  const pc = document.getElementById("planet"),
+    scene = document.getElementById("planet-scene");
+  let gl = null,
+    program = null,
+    buffer = null,
+    uniforms = {},
+    planetInView = false;
+  const vertex = `attribute vec2 aPosition;void main(){gl_Position=vec4(aPosition,0.,1.);}`;
+  const fragment = `precision mediump float;
 uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;
 mat3 rx(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}mat3 rz(float a){float c=cos(a),s=sin(a);return mat3(c,s,0.,-s,c,0.,0.,0.,1.);}
 float hash(vec3 p){p=fract(p*.3183099+vec3(.11,.27,.39));p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
@@ -27,16 +37,208 @@ if(ts>0.){vec3 p=ro+rd*ts;vec3 n=normalize(p);vec3 q=tilt*p;float a=uTime*.055;v
 if(ra>0.&&ts>0.&&tr<ts){col=mix(col,rc,ra);alpha=1.;}
 float halo=exp(-abs(closeD-1.025)*34.)*.10;if(ts<0.){col+=vec3(.32,.35,.82)*halo;alpha=max(alpha,halo);}
 gl_FragColor=vec4(col,alpha);}`;
-function initPlanet(){try{gl=pc.getContext('webgl',{alpha:true,antialias:false,premultipliedAlpha:false,powerPreference:'low-power'});if(!gl)return;function compile(type,src){const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){gl.deleteShader(sh);throw new Error('Shader unavailable')}return sh}const vs=compile(gl.VERTEX_SHADER,vertex),fs=compile(gl.FRAGMENT_SHADER,fragment);program=gl.createProgram();gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error('Shader link unavailable');gl.useProgram(program);const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const pos=gl.getAttribLocation(program,'aPosition');gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);for(const key of ['uResolution','uTime','uPointer'])uniforms[key]=gl.getUniformLocation(program,key);scene.classList.add('webgl-ready');resizePlanet()}catch(e){gl=null;scene.classList.remove('webgl-ready')}}
-function resizePlanet(){if(!gl)return;const rect=pc.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,innerWidth<700?1:1.3);pc.width=Math.max(1,Math.round(rect.width*dpr));pc.height=Math.max(1,Math.round(rect.height*dpr));gl.viewport(0,0,pc.width,pc.height);force=true;schedule()}
-function drawPlanet(t){if(!gl||!planetInView)return;gl.useProgram(program);gl.uniform2f(uniforms.uResolution,pc.width,pc.height);gl.uniform1f(uniforms.uTime,t);gl.uniform2f(uniforms.uPointer,px,py);gl.drawArrays(gl.TRIANGLES,0,6)}
-scene.addEventListener('pointermove',e=>{const r=scene.getBoundingClientRect();targetX=(e.clientX-r.left)/r.width*2-1;targetY=(e.clientY-r.top)/r.height*2-1;force=true;schedule()},{passive:true});scene.addEventListener('pointerleave',()=>{targetX=targetY=0;force=true;schedule()});
-if('IntersectionObserver'in window)new IntersectionObserver(entries=>{planetInView=entries[0].isIntersecting;if(planetInView){force=true;schedule()}}).observe(scene);
-pc.addEventListener('webglcontextlost',e=>{e.preventDefault();gl=null;scene.classList.remove('webgl-ready')});pc.addEventListener('webglcontextrestored',()=>{initPlanet();force=true;schedule()});
-function schedule(){if(!frameId&&visible)frameId=requestAnimationFrame(tick)}
-function tick(now){frameId=0;if(!visible)return;const elapsed=last?now-last:34;if(elapsed<32&&!force){schedule();return}const dt=Math.min(elapsed/1000,.05);last=now;if(!paused)time+=dt;px+=(targetX-px)*.045;py+=(targetY-py)*.045;drawStars(time,paused?0:dt);drawPlanet(time);force=false;if(!paused)schedule()}
-document.addEventListener('visibilitychange',()=>{visible=!document.hidden;if(visible){last=0;force=true;schedule()}else if(frameId){cancelAnimationFrame(frameId);frameId=0}});
-addEventListener('resize',()=>{resizeStars();resizePlanet()},{passive:true});
-document.getElementById('hug').addEventListener('click',()=>{if(paused)return;const wave=document.createElement('div');wave.className='nova-wave';document.body.append(wave);setTimeout(()=>wave.remove(),1800);meteors.push({x:width*.75,y:height*.3,life:0});});
-resizeStars();initPlanet();schedule();
+
+  function clearGL() {
+    if (gl) {
+      if (buffer) gl.deleteBuffer(buffer);
+      if (program) gl.deleteProgram(program);
+    }
+    buffer = program = null;
+    gl = null;
+    scene?.classList.remove("webgl-ready");
+  }
+  function initPlanet() {
+    if (!pc || !scene) return;
+    let vs, fs;
+    try {
+      gl = pc.getContext("webgl", {
+        alpha: true,
+        antialias: false,
+        premultipliedAlpha: false,
+        powerPreference: "low-power",
+      });
+      if (!gl) return;
+      const compile = (type, src) => {
+        const sh = gl.createShader(type);
+        if (!sh) throw Error("Shader allocation");
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+          gl.deleteShader(sh);
+          throw Error("Shader unavailable");
+        }
+        return sh;
+      };
+      vs = compile(gl.VERTEX_SHADER, vertex);
+      fs = compile(gl.FRAGMENT_SHADER, fragment);
+      program = gl.createProgram();
+      gl.attachShader(program, vs);
+      gl.attachShader(program, fs);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+        throw Error("Link failed");
+      gl.useProgram(program);
+      buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+        gl.STATIC_DRAW,
+      );
+      const pos = gl.getAttribLocation(program, "aPosition");
+      if (pos < 0) throw Error("Attribute missing");
+      gl.enableVertexAttribArray(pos);
+      gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+      for (const key of ["uResolution", "uTime", "uPointer"])
+        uniforms[key] = gl.getUniformLocation(program, key);
+      scene.classList.add("webgl-ready");
+      dirty = true;
+    } catch {
+      if (gl) {
+        if (vs) gl.deleteShader(vs);
+        if (fs) gl.deleteShader(fs);
+      }
+      vs = fs = null;
+      clearGL();
+    } finally {
+      if (gl) {
+        if (vs) gl.deleteShader(vs);
+        if (fs) gl.deleteShader(fs);
+      }
+    }
+  }
+  function resize() {
+    const nw = innerWidth,
+      nh = innerHeight,
+      nd = Math.min(devicePixelRatio || 1, 1.5);
+    if (nw !== width || nh !== height || nd !== dpr) {
+      width = nw;
+      height = nh;
+      dpr = nd;
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      stars = Array.from({ length: width < 700 ? 100 : 200 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: 0.5 + Math.random() * 1.2,
+        phase: Math.random() * Math.PI * 2,
+      }));
+      dirty = true;
+    }
+    if (gl && planetInView) {
+      const r = pc.getBoundingClientRect(),
+        scale = Math.min(dpr, 1.2);
+      if (r.width > 0 && r.height > 0) {
+        const w = Math.round(r.width * scale),
+          h = Math.round(r.height * scale);
+        if (pc.width !== w || pc.height !== h) {
+          pc.width = w;
+          pc.height = h;
+          gl.viewport(0, 0, w, h);
+          dirty = true;
+        }
+      }
+    }
+  }
+  function draw(dt) {
+    ctx.clearRect(0, 0, width, height);
+    for (const s of stars) {
+      ctx.fillStyle = `rgba(200,185,255,${0.25 + 0.45 * (0.5 + 0.5 * Math.sin(time * 0.5 + s.phase))})`;
+      ctx.beginPath();
+      ctx.arc(s.x + px * 8, s.y + py * 6, s.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (dt && time > nextMeteor) {
+      meteors.push({
+        x: width * (0.3 + Math.random() * 0.7),
+        y: height * Math.random() * 0.4,
+        life: 0,
+      });
+      nextMeteor = time + 8;
+    }
+    meteors = meteors.filter((m) => m.life < 1.4);
+    for (const m of meteors) {
+      m.life += dt;
+      const x = m.x - m.life * 280,
+        y = m.y + m.life * 140,
+        a = Math.sin(Math.min(1, m.life / 1.4) * Math.PI);
+      const gradient = ctx.createLinearGradient(x, y, x + 90, y - 45);
+      gradient.addColorStop(0, `rgba(210,200,255,${a})`);
+      gradient.addColorStop(1, "rgba(180,150,255,0)");
+      ctx.strokeStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + 90, y - 45);
+      ctx.stroke();
+    }
+    if (gl && planetInView && pc.width && pc.height) {
+      gl.useProgram(program);
+      gl.uniform2f(uniforms.uResolution, pc.width, pc.height);
+      gl.uniform1f(uniforms.uTime, time);
+      gl.uniform2f(uniforms.uPointer, px, py);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+  }
+  let since = 0;
+  Universe.add((dt, now, paused) => {
+    resize();
+    since += dt;
+    if (!dirty && since < 1 / 30 && !paused) return true;
+    if (paused && !dirty) return false;
+    if (!paused) {
+      time += since;
+      px += (targetX - px) * 0.1;
+      py += (targetY - py) * 0.1;
+    }
+    draw(paused ? 0 : since);
+    since = 0;
+    dirty = false;
+    return !paused;
+  });
+  if (scene) {
+    scene.addEventListener(
+      "pointermove",
+      (e) => {
+        const r = scene.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        targetX = ((e.clientX - r.left) / r.width) * 2 - 1;
+        targetY = ((e.clientY - r.top) / r.height) * 2 - 1;
+        dirty = true;
+        Universe.wake();
+      },
+      { passive: true },
+    );
+    scene.addEventListener("pointerleave", () => {
+      targetX = targetY = 0;
+      dirty = true;
+      Universe.wake();
+    });
+    if ("IntersectionObserver" in window)
+      new IntersectionObserver((entries) => {
+        planetInView = entries[0].isIntersecting;
+        dirty = true;
+        Universe.wake();
+      }).observe(scene);
+    else planetInView = true;
+  }
+  pc?.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    gl = null;
+    program = buffer = null;
+    scene?.classList.remove("webgl-ready");
+  });
+  pc?.addEventListener("webglcontextrestored", () => {
+    initPlanet();
+    Universe.wake();
+  });
+  document.addEventListener("motion-change", () => {
+    dirty = true;
+  });
+  document.addEventListener("letter-rendered", () => {
+    dirty = true;
+    Universe.wake();
+  });
+  addEventListener("resize", () => (dirty = true), { passive: true });
+  initPlanet();
 })();

@@ -1,34 +1,266 @@
-'use strict';
-const $=id=>document.getElementById(id);
-const occasions={just:{name:'Просто так',title:'твоя Вселенная.',label:'Без повода. От всего сердца.',intro:'Иногда самый хороший повод — просто вспомнить, как много человек для тебя значит.',wish:'Пусть среди обычных дней почаще случаются необыкновенно хорошие. С любимыми мелочами, неожиданными радостями и ощущением, что жизнь обнимает тебя в ответ.'},birthday:{name:'День рождения',title:'это твой день.',label:'С днём рождения!',intro:'Сегодня хороший день, чтобы напомнить: твоё появление в этом мире — настоящий подарок.',wish:'С днём рождения! Пусть новый год твоей жизни будет не гонкой за чужими ожиданиями, а дорогой к тому, что радует именно тебя. Желаю здоровья, сил для мечтаний и множества поводов сказать: «Как же сейчас хорошо».'},newyear:{name:'Новый год',title:'навстречу хорошему.',label:'С Новым годом!',intro:'Пусть впереди будет больше тёплых встреч, маленьких чудес и счастливых «помнишь?».',wish:'С Новым годом! Пусть в нём найдётся место и смелым началам, и спокойным вечерам. Пусть хорошее из прошлого останется рядом, а впереди будет то, чего ты ждёшь с надеждой. И пусть на всё это хватит сил и времени.'},nauryz:{name:'Наурыз',title:'пусть всё расцветает.',label:'Наурыз құтты болсын!',intro:'Новое начало, весенний свет и самые добрые пожелания — для тебя.',wish:'Наурыз құтты болсын! Пусть весна принесёт обновление, в доме будет тепло и достаток, а за одним столом чаще собираются дорогие люди. Желаю мира, здоровья и добрых перемен, которым хочется открыть дверь.'},march:{name:'8 Марта',title:'весна начинается с тепла.',label:'С 8 Марта!',intro:'Пусть сегодня будет много внимания, искренних слов и приятных сюрпризов.',wish:'С 8 Марта! Желаю свободы выбирать свой путь, уважения к твоим решениям и радости от каждого маленького достижения. Пусть забота, поддержка и внимание окружают тебя не только в праздник.'},valentine:{name:'14 февраля',title:'о самом нежном.',label:'С Днём всех влюблённых!',intro:'Для слов, которые хочется произносить тихо. И чувств, которыми хочется делиться.',wish:'С Днём всех влюблённых! Пусть любовь будет местом, где спокойно и тепло. Где слышат, берегут и выбирают друг друга каждый день. Пусть для нежности всегда находится время.'},friendship:{name:'День дружбы',title:'как хорошо, что мы знакомы.',label:'С Днём дружбы!',intro:'Некоторые встречи делают жизнь добрее. Наша — одна из них.',wish:'С Днём дружбы! Желаю тебе людей, которым можно написать без повода, с которыми приятно и говорить, и молчать. Пусть расстояния и занятость не забирают у нас простое «Как ты?».'},custom:{name:'Твой особенный день',title:'это стоит отпраздновать.',label:'С твоим особенным днём!',intro:'Есть моменты, которые хочется бережно оставить в памяти. Пусть этот будет одним из них.',wish:'Поздравляю с твоим особенным днём! Пусть за ним последует много нового и хорошего. Желаю успеть насладиться этим моментом — почувствовать радость, выдохнуть и улыбнуться тому, что уже получилось.'}};
-const tones={friend:{opening:'Мне нравится, что среди стольких людей мы встретились. Что теперь можно просто написать тебе, поделиться какой-нибудь ерундой, посмеяться или поговорить о важном. Такие вещи кажутся обычными — пока не понимаешь, как много они дают.',middle:'Спасибо за нашу дружбу. За возможность оставаться собой и не подбирать идеальную версию каждого слова. Я ценю тебя, наше общение и то место, которое ты занимаешь в моей жизни.',reasons:['Даже короткий разговор может сделать обычный день приятнее. Мне радостно, что у нас есть возможность делиться друг с другом жизнью.','Мне не нужен идеальный собеседник. Мне интересно именно с тобой: с твоими мыслями, юмором, мечтами и взглядом на мир.','Дружба складывается из небольших моментов. И для меня эти моменты с тобой — совсем не мелочи.'],end:'Спасибо, что мы есть друг у друга. Пусть впереди у нас будет ещё много хороших историй.'},love:{opening:'Иногда я думаю о том, как удивительно: один человек может стать таким важным. Хочется рассказать тебе первым о чём-то хорошем, услышать твой голос и просто знать, как прошёл твой день.',middle:'Я люблю тебя. Не только в красивые моменты и праздничные даты. Мне хочется беречь то, что между нами есть: внимание, доверие, нежность и возможность быть настоящими рядом друг с другом.',reasons:['Мысль о тебе добавляет тепла даже самому обычному дню. Для меня важно, чтобы и тебе рядом со мной было хорошо.','Я люблю в тебе живого человека — с мечтами, настроениями и своим характером. Тебе не нужно заслуживать нежность совершенством.','Для меня любовь — это ещё и внимание к мелочам. Слышать, спрашивать, поддерживать и находить время друг для друга.'],end:'Люблю тебя. Пусть в этом письме останется немного моей нежности, к которой можно вернуться.'},respect:{opening:'Мне хочется сказать тебе то, что в повседневной суете легко оставить невысказанным: я отношусь к тебе с большим уважением. И мне приятно, что в моей жизни есть наше общение.',middle:'Я ценю твою индивидуальность, твой взгляд на вещи и возможность узнавать тебя. Для уважения не обязательно во всём соглашаться — для меня гораздо важнее внимание к человеку и его границам.',reasons:['Мне приятно общаться с тобой. Такие встречи и разговоры добавляют жизни смысла и оставляют после себя хорошие мысли.','У тебя есть свой путь и свой взгляд на мир. Я уважаю твоё право выбирать то, что важно именно тебе.','Хочется, чтобы ты знал: моё доброе отношение — искреннее. Я ценю знакомство с тобой и желаю тебе хорошего.'],end:'С искренним уважением и самыми добрыми пожеланиями. Пусть у тебя всё складывается.'}};
-const authorMode=document.body.dataset.page==='author';
-let config={to:'',from:'',holiday:'just',tone:'friend',message:'',scene:'together',journey:'auto'},opened=false,hugs=0,openingTimer=0,openingBusy=false;
-const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-const sceneNames=['warmth','together','support','dream','love','respect'];
-function normalize(v){const s=(x,n)=>typeof x==='string'?x.slice(0,n):'';return{to:s(v?.to,45),from:s(v?.from,60),holiday:Object.hasOwn(occasions,v?.holiday)?v.holiday:'just',tone:Object.hasOwn(tones,v?.tone)?v.tone:'friend',message:s(v?.message,1800),scene:sceneNames.includes(v?.scene)?v.scene:'together',journey:['auto','love','birthday','gentle'].includes(v?.journey)?v.journey:'auto'}}
-function encode(v){const bytes=new TextEncoder().encode(JSON.stringify(v));let s='';bytes.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replaceAll('+','-').replaceAll('/','_').replace(/=+$/,'')}
-function decode(s){if(s.length>20000)throw Error('Too long');return normalize(JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0)))))}
-function readHash(){if(!location.hash.startsWith('#letter='))return false;try{config=decode(location.hash.slice(8));return true}catch(e){$('missing-message').textContent='Похоже, ссылка скопирована не целиком. Попроси отправителя прислать её ещё раз.';return false}}
-function linkFor(v){const url=new URL('./index.html',location.href);url.hash='letter='+encode(v);return url.href}
-let observer;if('IntersectionObserver'in window){document.body.classList.add('motion');observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}}),{threshold:.08})}
-function render(){const o=occasions[config.holiday],t=tones[config.tone];$('recipient').textContent=config.to?config.to+',':'Для тебя,';$('headline').textContent=config.holiday==='just'?'это твоя Вселенная.':o.title;$('dedication').textContent=config.from?'ОТ '+config.from.toUpperCase()+' · ТОЛЬКО ДЛЯ ТЕБЯ':'ПОСЛАНИЕ, АДРЕСОВАННОЕ ТЕБЕ';$('intro').textContent=config.holiday==='just'?'Среди миллиардов звёзд и бесконечных расстояний есть кое-что совсем близкое. Моё тепло к тебе.':o.intro;$('letter-label').textContent=o.label.toUpperCase();$('salutation').textContent=config.to?config.to+', это тебе.':'Знаешь что?';$('letter-body').replaceChildren();
- const rows=[{text:t.opening,scene:config.tone==='respect'?'respect':'together'},{text:t.middle,scene:config.tone==='love'?'love':config.tone==='respect'?'respect':'together'},...(config.message?[{text:config.message,scene:config.scene}]:[]),{text:o.wish,scene:'dream'},{text:'Пожалуйста, не забывай заботиться о себе. Тебе не обязательно всё успевать и всегда быть в хорошем настроении. Можно отдыхать, искать своё и радоваться небольшим шагам. Мне хочется, чтобы в твоей жизни было больше доброты — в том числе к себе.',scene:'support'}];
- for(const row of rows){const p=document.createElement('p');p.textContent=row.text;p.dataset.scene=row.scene;$('letter-body').append(p)}
- $('sender').textContent=config.from||'человек, который тебя ценит';t.reasons.forEach((r,i)=>{const p=$('reason'+(i+1));p.textContent=r;p.dataset.scene=['warmth','respect',config.tone==='love'?'love':'together'][i]});$('closing').textContent=t.end;$('closing').dataset.scene=config.tone==='love'?'love':'together';
- const messages=['Даже если сегодня получается только маленький шаг — это уже шаг. Побудь к себе добрее. Твоя ценность не измеряется продуктивностью.','Необязательно заранее знать весь путь. Иногда достаточно любопытства и одного небольшого «А почему бы не попробовать?».','Где-то есть человек, который улыбается, вспоминая тебя. И это письмо — очень прямой намёк ♡'];document.querySelectorAll('[data-note]').forEach((p,i)=>{p.textContent=messages[i];p.dataset.scene=['support','dream','warmth'][i]});
- document.title=authorMode?'Мастерская · '+(config.to||'Новое письмо'):(config.to?config.to+', это':'Это')+' для тебя ✧';document.dispatchEvent(new CustomEvent('letter-rendered',{detail:{...config}}));}
-function openLetter(scroll=true){if(openingBusy)return;const first=!opened,still=reduced.matches||document.body.classList.contains('paused');$('story').hidden=false;$('open').classList.add('opened');$('open-hint').textContent='сигнал достиг самого сердца ♡';$('open').setAttribute('aria-label','Перейти к письму');$('replay-envelope').hidden=false;if(first){opened=true;document.querySelectorAll('.reveal').forEach(el=>observer?.observe(el));burst(16)}clearTimeout(openingTimer);if(first&&!still&&scroll){openingBusy=true;$('open').setAttribute('aria-busy','true');document.body.classList.add('opening-letter')}openingTimer=setTimeout(()=>{openingBusy=false;$('open').removeAttribute('aria-busy');document.body.classList.remove('opening-letter');if(scroll)$('letter').scrollIntoView({behavior:still?'instant':'smooth',block:'start'})},first&&!still&&scroll?2300:0)}
-function resetEnvelope(){clearTimeout(openingTimer);openingBusy=false;opened=false;document.body.classList.remove('opening-letter');$('open').removeAttribute('aria-busy');$('open').classList.remove('opened');$('story').hidden=true;$('replay-envelope').hidden=true;$('open-hint').textContent='открой своё послание ↗'}
-$('open').onclick=()=>openLetter();$('replay-envelope').onclick=()=>{if(openingBusy)return;resetEnvelope();void $('open').offsetWidth;openLetter(true)};document.querySelector('.scroll-link').onclick=e=>{e.preventDefault();openLetter()};
-function setPage(available){document.querySelector('main').hidden=!available;document.querySelector('footer').hidden=!available;$('missing-letter').hidden=available;document.body.classList.toggle('no-letter',!available);if(available)requestAnimationFrame(()=>dispatchEvent(new Event('resize')))}
-if(authorMode){for(const [key,value] of Object.entries(occasions)){const opt=document.createElement('option');opt.value=key;opt.textContent=value.name;$('holiday-input').append(opt)}
- function openEditor(){$('to-input').value=config.to;$('from-input').value=config.from;$('holiday-input').value=config.holiday;$('tone-input').value=config.tone;$('message-input').value=config.message;$('scene-input').value=config.scene;$('journey-input').value=config.journey;$('status').textContent='';$('share-result').hidden=true;$('editor').showModal()}
- function readForm(){if(!$('form').reportValidity())return false;config=normalize({to:$('to-input').value.trim(),from:$('from-input').value.trim(),holiday:$('holiday-input').value,tone:$('tone-input').value,message:$('message-input').value.trim(),scene:$('scene-input').value,journey:$('journey-input').value});if(!config.to||!config.from){$('status').textContent='Укажи имя получателя и свою подпись.';return false}render();setPage(true);return true}
- $('edit').onclick=openEditor;$('close').onclick=()=>$('editor').close();$('form').onsubmit=e=>{e.preventDefault();if(!readForm())return;$('editor').close();resetEnvelope();document.querySelector('main').hidden=false;$('home').scrollIntoView({behavior:reduced.matches?'instant':'smooth'})};$('share').onclick=async()=>{if(!readForm())return;const url=linkFor(config);$('share-url').value=url;$('share-result').hidden=false;try{await navigator.clipboard.writeText(url);$('status').textContent='Персональная ссылка скопирована. Получатель увидит только письмо для '+config.to+'.'}catch(e){$('share-url').focus();$('share-url').select();$('status').textContent='Скопируй готовую персональную ссылку из поля выше.'}};
- readHash();render();setPage(true);openEditor();
-}else{const valid=readHash();if(valid)render();setPage(valid)}
-addEventListener('hashchange',()=>{if(!location.hash.startsWith('#letter=')){if(!authorMode){resetEnvelope();setPage(false)}return;}resetEnvelope();const valid=readHash();if(valid)render();setPage(valid);scrollTo(0,0)});
-function burst(count=32){if(reduced.matches||document.body.classList.contains('paused'))return;for(let i=0;i<count;i++){const p=document.createElement('span');p.className='particle';p.textContent=['♡','✦','✧','·'][i%4];p.style.setProperty('--x',(Math.random()-.5)*Math.min(innerWidth,1100)+'px');p.style.setProperty('--y',(-150-Math.random()*400)+'px');p.style.setProperty('--r',(Math.random()-.5)*280+'deg');p.style.left=35+Math.random()*30+'%';p.style.top=55+Math.random()*30+'%';$('particles').append(p);setTimeout(()=>p.remove(),2900)}}
-$('hug').onclick=()=>{burst();const lines=['Лови. Это всё тебе. И ещё чуть-чуть сверху ♡','Обнимаю словами. Пусть на душе станет теплее.','Улыбка тебе очень идёт. Даже если её сейчас никто не видит.','Тепло не заканчивается. Можно забрать ещё ♡'];$('hug-message').textContent=lines[hugs++%lines.length]};
-function progress(){const max=document.documentElement.scrollHeight-innerHeight;$('progress').style.width=(max>0?scrollY/max*100:0)+'%'}addEventListener('scroll',progress,{passive:true});addEventListener('resize',progress);
+(() => {
+  "use strict";
+  const { occasions, tones } = window.UniverseMessages;
+  const $ = (id) => document.getElementById(id);
+  const author = document.body.dataset.page === "author";
+  let config = {},
+    shareURL = "",
+    hugs = 0;
+  const has = (o, k) =>
+    typeof k === "string" && Object.prototype.hasOwnProperty.call(o, k);
+  function normalize(v) {
+    if (!v || typeof v !== "object" || Array.isArray(v))
+      throw Error("Invalid letter");
+    const str = (x, n) =>
+      typeof x === "string" ? [...x.trim()].slice(0, n).join("") : "";
+    return {
+      to: str(v.to, 45),
+      from: str(v.from, 60),
+      holiday: has(occasions, v.holiday) ? v.holiday : "just",
+      tone: has(tones, v.tone) ? v.tone : "friend",
+      message: str(v.message, 1800),
+      scene: [
+        "warmth",
+        "together",
+        "support",
+        "dream",
+        "love",
+        "respect",
+      ].includes(v.scene)
+        ? v.scene
+        : "together",
+      journey: ["auto", "love", "birthday", "gentle"].includes(v.journey)
+        ? v.journey
+        : "auto",
+    };
+  }
+  function encode(v) {
+    const bytes = new TextEncoder().encode(JSON.stringify(v));
+    let s = "";
+    bytes.forEach((b) => (s += String.fromCharCode(b)));
+    return btoa(s).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+  }
+  function decode(s) {
+    if (!s || s.length > 20000 || !/^[\w-]+$/.test(s))
+      throw Error("Invalid link");
+    const v = normalize(
+      JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(
+          Uint8Array.from(
+            atob(s.replaceAll("-", "+").replaceAll("_", "/")),
+            (c) => c.charCodeAt(0),
+          ),
+        ),
+      ),
+    );
+    if (!v.to || !v.from) throw Error("Missing names");
+    return v;
+  }
+  function linkFor(v) {
+    const url = new URL("index.html", location.href);
+    url.search = "";
+    url.hash = "letter=" + encode(v);
+    return url.href;
+  }
+  function show(available) {
+    $("missing-letter").hidden = available || author;
+    document.querySelector("main").hidden = !available;
+    document.querySelector("footer").hidden = !available;
+    Universe.wake();
+  }
+  function render() {
+    const o = occasions[config.holiday],
+      t = tones[config.tone];
+    $("recipient").textContent = config.to + ", ";
+    $("headline").textContent =
+      config.holiday === "just" ? "это твоя Вселенная." : o.title;
+    $("dedication").textContent =
+      "ОТ " + config.from.toUpperCase() + " · ТОЛЬКО ДЛЯ ТЕБЯ";
+    $("intro").textContent = o.intro;
+    $("letter-label").textContent = o.label.toUpperCase();
+    $("salutation").textContent = config.to + ", это тебе.";
+    const rows = [
+      {
+        text: t.opening,
+        scene: config.tone === "respect" ? "respect" : "together",
+      },
+      {
+        text: t.middle,
+        scene:
+          config.tone === "love"
+            ? "love"
+            : config.tone === "respect"
+              ? "respect"
+              : "together",
+      },
+      ...(config.message
+        ? [{ text: config.message, scene: config.scene }]
+        : []),
+      { text: o.wish, scene: "dream" },
+      {
+        text: "Пожалуйста, не забывай заботиться о себе. Можно отдыхать, искать своё и радоваться небольшим шагам. Мне хочется, чтобы в твоей жизни было больше доброты — в том числе к себе.",
+        scene: "support",
+      },
+    ];
+    $("letter-body").replaceChildren(
+      ...rows.map((row) => {
+        const p = document.createElement("p");
+        p.textContent = row.text;
+        p.dataset.scene = row.scene;
+        return p;
+      }),
+    );
+    $("sender").textContent = config.from;
+    t.reasons.forEach((text, i) => {
+      $("reason" + (i + 1)).textContent = text;
+      $("reason" + (i + 1)).dataset.scene = [
+        "warmth",
+        "respect",
+        config.tone === "love" ? "love" : "together",
+      ][i];
+    });
+    $("closing").textContent = t.end;
+    $("closing").dataset.scene = config.tone === "love" ? "love" : "together";
+    const notes = [
+      "Даже маленький шаг — уже шаг. Побудь к себе добрее. Твоя ценность не измеряется продуктивностью.",
+      "Необязательно заранее знать весь путь. Иногда достаточно любопытства и одного небольшого «А почему бы не попробовать?».",
+      "Где-то есть человек, который улыбается, вспоминая тебя. И это письмо — очень прямой намёк ♡",
+    ];
+    document.querySelectorAll("[data-note]").forEach((p, i) => {
+      p.textContent = notes[i];
+      p.dataset.scene = ["support", "dream", "warmth"][i];
+    });
+    document.title = author
+      ? "Мастерская · " + config.to
+      : config.to + ", это для тебя ✧";
+    document.dispatchEvent(
+      new CustomEvent("letter-rendered", { detail: { ...config } }),
+    );
+    show(true);
+  }
+  function scrollToElement(id) {
+    $(id)?.scrollIntoView({
+      behavior: Universe.paused ? "auto" : "smooth",
+      block: "start",
+    });
+  }
+  $("start-story").addEventListener("click", () =>
+    scrollToElement("visual-journey"),
+  );
+  if (author) {
+    for (const [key, o] of Object.entries(occasions)) {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = o.name;
+      $("holiday-input").append(opt);
+    }
+    const fields = {
+      to: "to-input",
+      from: "from-input",
+      holiday: "holiday-input",
+      tone: "tone-input",
+      message: "message-input",
+      scene: "scene-input",
+      journey: "journey-input",
+    };
+    function fill() {
+      for (const [k, id] of Object.entries(fields))
+        $(id).value = config[k] || "";
+    }
+    function read() {
+      if (!$("form").reportValidity()) return false;
+      config = normalize(
+        Object.fromEntries(
+          Object.entries(fields).map(([k, id]) => [k, $(id).value]),
+        ),
+      );
+      if (!config.to || !config.from) {
+        $("status").textContent = "Укажи имена, а не пробелы.";
+        return false;
+      }
+      render();
+      return true;
+    }
+    $("form").addEventListener("input", () => {
+      $("share-result").hidden = true;
+      $("open-preview").hidden = true;
+      shareURL = "";
+      $("status").textContent =
+        "Изменения ещё не включены в ссылку. Нажми «Посмотреть» или «Скопировать».";
+    });
+    $("edit").addEventListener("click", () => scrollToElement("editor"));
+    $("form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (read()) scrollToElement("home");
+    });
+    $("share").addEventListener("click", async () => {
+      if (!read()) return;
+      shareURL = linkFor(config);
+      const copyingURL = shareURL,
+        copyingName = config.to;
+      $("share-url").value = shareURL;
+      $("share-result").hidden = false;
+      $("open-preview").hidden = false;
+      try {
+        if (!navigator.clipboard?.writeText)
+          throw Error("Clipboard unavailable");
+        await navigator.clipboard.writeText(shareURL);
+        $("status").textContent =
+          "Ссылка скопирована. Отправь её " + config.to + ".";
+      } catch {
+        $("share-url").focus();
+        $("share-url").select();
+        $("status").textContent = "Скопируй полную ссылку из поля вручную.";
+      }
+    });
+    $("open-preview").addEventListener("click", () => {
+      if (shareURL) window.open(shareURL, "_blank", "noopener,noreferrer");
+    });
+    config = normalize({});
+    try {
+      if (location.hash.startsWith("#letter="))
+        config = decode(location.hash.slice(8));
+    } catch {
+      $("status").textContent =
+        "Ссылка повреждена. Можно создать новое письмо.";
+    }
+    fill();
+    if (config.to && config.from) render();
+    else show(false);
+  } else {
+    function load() {
+      try {
+        if (!location.hash.startsWith("#letter=")) throw Error("No letter");
+        config = decode(location.hash.slice(8));
+        render();
+      } catch {
+        show(false);
+        $("missing-message").textContent = location.hash.startsWith("#letter=")
+          ? "Ссылка повреждена или скопирована не целиком. Попроси отправителя прислать её снова."
+          : "Открой полную личную ссылку, которую тебе отправили.";
+      }
+    }
+    load();
+    addEventListener("hashchange", load);
+  }
+  $("hug").addEventListener("click", () => {
+    const lines = [
+      "Этот свет — для тебя. ♡",
+      "Пусть на душе станет немного теплее.",
+      "Пусть у тебя будет ещё много поводов улыбнуться.",
+    ];
+    $("hug-message").textContent = lines[hugs++ % lines.length];
+    document.dispatchEvent(new Event("supernova"));
+  });
+  function progress() {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    $("progress").style.width =
+      (max > 0 ? Math.max(0, Math.min(100, (scrollY / max) * 100)) : 0) + "%";
+  }
+  addEventListener("scroll", progress, { passive: true });
+  addEventListener("resize", progress);
+  document.addEventListener("letter-rendered", () =>
+    requestAnimationFrame(progress),
+  );
+  progress();
+})();
