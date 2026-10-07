@@ -30,12 +30,20 @@
         ? v.scene
         : "together",
       variant: ["all", "0", "1", "2"].includes(v.variant) ? v.variant : "all",
-      journey:
-        v.holiday === "memorial"
+      journey: [
+        "auto",
+        "love",
+        "birthday",
+        "gentle",
+        "pack_0",
+        "pack_1",
+        "pack_2",
+      ].includes(v.journey)
+        ? v.holiday === "memorial" &&
+          !["auto", "pack_0", "pack_1", "pack_2"].includes(v.journey)
           ? "auto"
-          : ["auto", "love", "birthday", "gentle"].includes(v.journey)
-            ? v.journey
-            : "auto",
+          : v.journey
+        : "auto",
     };
   }
   function encode(v) {
@@ -228,7 +236,41 @@
       journey: "journey-input",
       variant: "variant-input",
     };
+    function updatePackOptions() {
+      const select = $("journey-input"),
+        prev = select.value;
+      select.replaceChildren();
+      const choices = [
+        ["auto", "Прежние сцены темы"],
+        ...AnimationPacks.options({
+          holiday: $("holiday-input").value,
+          tone: $("tone-input").value,
+        }),
+        ...($("holiday-input").value === "memorial"
+          ? []
+          : [
+              ["love", "Классический космос для любимой"],
+              ["birthday", "Классический сюрприз"],
+              ["gentle", "Классическая тёплая история"],
+            ]),
+      ];
+      for (const [value, label] of choices) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.append(option);
+      }
+      select.value = [...select.options].some((o) => o.value === prev)
+        ? prev
+        : "auto";
+      const selected = select.options[select.selectedIndex];
+      $("pack-description").textContent = select.value.startsWith("pack_")
+        ? selected.textContent +
+          ". Это отдельная история из трёх сцен; оформление остаётся выбранной темы."
+        : "Сохранённый набор анимаций. Для новых историй выбери один из трёх тематических наборов выше.";
+    }
     function updateVariants() {
+      updatePackOptions();
       const cfg = {
         holiday: $("holiday-input").value,
         tone: $("tone-input").value,
@@ -284,7 +326,7 @@
         ["birthday", "memorial", "newborn", "may7", "wedding"].includes(key)
       )
         $("tone-input").value = "respect";
-      if (key === "memorial") $("journey-input").value = "auto";
+
       updateVariants();
       document.dispatchEvent(
         new CustomEvent("theme-preview", {
@@ -299,6 +341,7 @@
     function fill() {
       $("holiday-input").value = config.holiday;
       $("tone-input").value = config.tone;
+      updateVariants();
       $("journey-input").value = config.journey;
       updateVariants();
       for (const [k, id] of Object.entries(fields))
@@ -354,6 +397,7 @@
       if (shareURL) window.open(shareURL, "_blank", "noopener,noreferrer");
     });
     config = normalize({});
+    config.journey = "pack_0";
     try {
       if (location.hash.startsWith("#letter="))
         config = decode(location.hash.slice(8));

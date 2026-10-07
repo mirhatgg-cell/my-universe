@@ -88,6 +88,8 @@
     const themed =
       config.journey === "auto" ? ThemeScenes.select(config) : null;
     if (themed) types = [...themed, "name"];
+    const packed = AnimationPacks.select(config);
+    if (packed) types = [...packed, "name"];
     const personalType =
       config.holiday === "memorial"
         ? "theme:candle"
@@ -105,9 +107,11 @@
     types.forEach((entry, i) => {
       const personal = entry === "personal",
         type = personal ? personalType : entry;
-      const sceneCopy = type.startsWith("theme:")
-        ? ThemeScenes.scenes[type.slice(6)].slice(1)
-        : copy[type];
+      const sceneCopy = type.startsWith("pack:")
+        ? AnimationPacks.info(type)
+        : type.startsWith("theme:")
+          ? ThemeScenes.scenes[type.slice(6)].slice(1)
+          : copy[type];
       const section = document.createElement("article");
       section.className = "journey-chapter";
       const eyebrow = document.createElement("p");
@@ -242,7 +246,7 @@
       stage.onclick = () => {
         state.pulse = 1;
         if (type === "theme:cake") state.clicked = !state.clicked;
-        else if (type.startsWith("theme:"))
+        else if (type.startsWith("theme:") || type.startsWith("pack:"))
           state.time = Universe.paused ? 12 : 0;
         dirty = true;
         if (type === "gift") state.opened = !state.opened;
@@ -344,6 +348,7 @@
     g.translate(s.x * 18, s.y * 12);
     g.shadowBlur = 12;
     g.shadowColor = "#a889ff";
+    if (s.type.startsWith("pack:")) AnimationPacks.draw(s, t);
     if (s.type.startsWith("theme:")) ThemeScenes.draw(s.type.slice(6), s, t);
     if (s.type === "tree") {
       s.branches.forEach((b) => {
