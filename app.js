@@ -29,9 +29,13 @@
       ].includes(v.scene)
         ? v.scene
         : "together",
-      journey: ["auto", "love", "birthday", "gentle"].includes(v.journey)
-        ? v.journey
-        : "auto",
+      variant: ["all", "0", "1", "2"].includes(v.variant) ? v.variant : "all",
+      journey:
+        v.holiday === "memorial"
+          ? "auto"
+          : ["auto", "love", "birthday", "gentle"].includes(v.journey)
+            ? v.journey
+            : "auto",
     };
   }
   function encode(v) {
@@ -70,7 +74,66 @@
   }
   function render() {
     const o = occasions[config.holiday],
-      t = tones[config.tone];
+      t =
+        config.holiday === "memorial"
+          ? {
+              opening:
+                "Это письмо — место для памяти о дорогом человеке. Необязательно находить правильные слова.",
+              middle:
+                "Можно возвращаться к воспоминаниям, рассказывать о них близким и сохранять то, что было важно.",
+              reasons: ["", "", ""],
+              end: "Пусть память остаётся бережной, а рядом будет поддержка.",
+            }
+          : config.holiday === "newborn"
+            ? {
+                opening:
+                  "В вашей семье появилась новая жизнь. Поздравляю с этим большим и очень личным событием.",
+                middle:
+                  "Пусть малышу будет тепло и безопасно, а у родителей будут силы, помощь близких и возможность отдохнуть.",
+                reasons: [
+                  "Пусть будет много спокойных и тёплых моментов.",
+                  "Каждый ребёнок растёт в своём ритме.",
+                  "Просить помощи и заботиться о себе тоже важно.",
+                ],
+                end: "Здоровья малышу, сил семье и много счастливых первых открытий.",
+              }
+            : {
+                ...tones[
+                  config.holiday === "romance" ||
+                  config.holiday === "anniversary"
+                    ? "love"
+                    : config.tone
+                ],
+              };
+    const quiet = config.holiday === "memorial";
+    for (const selector of [".reasons", ".wish-section", ".pocket-section"])
+      document.querySelector(selector).hidden = quiet;
+    $("hug").textContent = quiet
+      ? "Зажечь огонёк памяти"
+      : "Зажечь свою сверхновую ✦";
+    document.querySelector(".final-section h2").textContent = quiet
+      ? "Светлая память."
+      : "Как хорошо, что ты есть.";
+    $("hug-message").textContent = quiet
+      ? "Можно просто побыть здесь и вспомнить."
+      : "Нажми — пусть Вселенная улыбнётся тебе.";
+    if (
+      ThemeScenes.catalog[config.holiday] &&
+      ![
+        "romance",
+        "anniversary",
+        "friendbirthday",
+        "memorial",
+        "newborn",
+      ].includes(config.holiday)
+    ) {
+      Object.assign(t, {
+        opening: o.intro,
+        middle: o.scenes[0][2],
+        reasons: o.scenes.map((row) => row[2]),
+        end: o.wish,
+      });
+    }
     $("recipient").textContent = config.to + ", ";
     $("headline").textContent =
       config.holiday === "just" ? "это твоя Вселенная." : o.title;
@@ -102,6 +165,7 @@
         scene: "support",
       },
     ];
+    if (quiet || config.holiday === "newborn") rows.pop();
     $("letter-body").replaceChildren(
       ...rows.map((row) => {
         const p = document.createElement("p");
@@ -162,8 +226,81 @@
       message: "message-input",
       scene: "scene-input",
       journey: "journey-input",
+      variant: "variant-input",
     };
+    function updateVariants() {
+      const cfg = {
+        holiday: $("holiday-input").value,
+        tone: $("tone-input").value,
+        variant: "all",
+      };
+      const entries = ThemeScenes.select(cfg);
+      const select = $("variant-input");
+      const prev = select.value;
+      select.replaceChildren();
+      for (const [value, label] of [
+        ["all", "Все три — последовательная история"],
+        ...(entries
+          ? entries.map((id, i) => [
+              String(i),
+              ThemeScenes.scenes[id.slice(6)][1],
+            ])
+          : []),
+      ]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        select.append(option);
+      }
+      select.value = [...select.options].some((o) => o.value === prev)
+        ? prev
+        : "all";
+      select.disabled = !entries || $("journey-input").value !== "auto";
+    }
+    for (const id of [
+      "holiday-input",
+      "tone-input",
+      "journey-input",
+      "variant-input",
+    ])
+      $(id).addEventListener("change", () => {
+        updateVariants();
+        document.dispatchEvent(
+          new CustomEvent("theme-preview", {
+            detail: {
+              holiday: $("holiday-input").value,
+              tone: $("tone-input").value,
+              variant: $("variant-input").value,
+            },
+          }),
+        );
+      });
+    $("holiday-input").addEventListener("change", () => {
+      const key = $("holiday-input").value;
+      if (["romance", "anniversary", "valentine"].includes(key))
+        $("tone-input").value = "love";
+      else if (key === "friendbirthday") $("tone-input").value = "friend";
+      else if (
+        ["birthday", "memorial", "newborn", "may7", "wedding"].includes(key)
+      )
+        $("tone-input").value = "respect";
+      if (key === "memorial") $("journey-input").value = "auto";
+      updateVariants();
+      document.dispatchEvent(
+        new CustomEvent("theme-preview", {
+          detail: {
+            holiday: key,
+            tone: $("tone-input").value,
+            variant: $("variant-input").value,
+          },
+        }),
+      );
+    });
     function fill() {
+      $("holiday-input").value = config.holiday;
+      $("tone-input").value = config.tone;
+      $("journey-input").value = config.journey;
+      updateVariants();
       for (const [k, id] of Object.entries(fields))
         $(id).value = config[k] || "";
     }
@@ -244,6 +381,11 @@
     addEventListener("hashchange", load);
   }
   $("hug").addEventListener("click", () => {
+    if (config.holiday === "memorial") {
+      $("hug-message").textContent = "Память может быть тихой. Береги себя.";
+      document.dispatchEvent(new Event("memory-light"));
+      return;
+    }
     const lines = [
       "Этот свет — для тебя. ♡",
       "Пусть на душе станет немного теплее.",

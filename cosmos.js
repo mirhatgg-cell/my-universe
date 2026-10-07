@@ -126,7 +126,7 @@ gl_FragColor=vec4(col,alpha);}`;
       }));
       dirty = true;
     }
-    if (gl && planetInView) {
+    if (gl && planetInView && !scene?.classList.contains("theme-art")) {
       const r = pc.getBoundingClientRect(),
         scale = Math.min(dpr, 1.2);
       if (r.width > 0 && r.height > 0) {
@@ -143,13 +143,63 @@ gl_FragColor=vec4(col,alpha);}`;
   }
   function draw(dt) {
     ctx.clearRect(0, 0, width, height);
-    for (const s of stars) {
-      ctx.fillStyle = `rgba(200,185,255,${0.25 + 0.45 * (0.5 + 0.5 * Math.sin(time * 0.5 + s.phase))})`;
-      ctx.beginPath();
-      ctx.arc(s.x + px * 8, s.y + py * 6, s.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    if (dt && time > nextMeteor) {
+    const theme = document.body.dataset.theme || "cosmos";
+    if (theme === "study") {
+      ctx.strokeStyle = "#a6c5e210";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 42) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += 42) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+    } else
+      for (const [i, s] of stars.entries()) {
+        if (i > 65 && theme !== "cosmos") break;
+        const a = 0.18 + 0.27 * (0.5 + 0.5 * Math.sin(time * 0.5 + s.phase));
+        let x = s.x + px * 8,
+          y = s.y + py * 6;
+        if (theme === "winter") {
+          x += Math.sin(time * 0.3 + s.phase) * 14;
+          y = (s.y + time * (8 + s.size * 7)) % height;
+          ctx.fillStyle = `rgba(201,232,242,${a + 0.08})`;
+        } else if (theme === "spring") {
+          y = (s.y + time * 9) % height;
+          x += Math.sin(time + s.phase) * 10;
+          ctx.fillStyle = `rgba(234,184,204,${a})`;
+        } else if (theme === "halloween") {
+          ctx.fillStyle = `rgba(224,163,103,${a})`;
+          y -= Math.sin(time * 0.2 + s.phase) * 8;
+        } else if (["summer", "home", "celebrate", "party"].includes(theme)) {
+          ctx.fillStyle = `rgba(229,206,147,${a})`;
+          y += Math.sin(time * 0.4 + s.phase) * 10;
+        } else if (theme === "memory") {
+          ctx.fillStyle = "rgba(193,197,202,.2)";
+        } else {
+          ctx.fillStyle = `rgba(200,185,255,${a})`;
+        }
+        ctx.beginPath();
+        if (theme === "spring")
+          ctx.ellipse(
+            x,
+            y,
+            s.size * 2,
+            s.size,
+            0.5 + Math.sin(time * 0.2 + s.phase),
+            0,
+            Math.PI * 2,
+          );
+        else ctx.arc(x, y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    if (theme !== "cosmos" && theme !== "romance") meteors = [];
+    if (dt && time > nextMeteor && ["cosmos", "romance"].includes(theme)) {
       meteors.push({
         x: width * (0.3 + Math.random() * 0.7),
         y: height * Math.random() * 0.4,
@@ -172,7 +222,13 @@ gl_FragColor=vec4(col,alpha);}`;
       ctx.lineTo(x + 90, y - 45);
       ctx.stroke();
     }
-    if (gl && planetInView && pc.width && pc.height) {
+    if (
+      gl &&
+      planetInView &&
+      pc.width &&
+      pc.height &&
+      !scene?.classList.contains("theme-art")
+    ) {
       gl.useProgram(program);
       gl.uniform2f(uniforms.uResolution, pc.width, pc.height);
       gl.uniform1f(uniforms.uTime, time);
@@ -234,6 +290,10 @@ gl_FragColor=vec4(col,alpha);}`;
   });
   document.addEventListener("motion-change", () => {
     dirty = true;
+  });
+  document.addEventListener("theme-preview", () => {
+    dirty = true;
+    Universe.wake();
   });
   document.addEventListener("letter-rendered", () => {
     dirty = true;

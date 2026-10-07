@@ -103,5 +103,11 @@
     },
   };
 
+  Object.assign(
+    occasions,
+    Object.fromEntries(
+      Object.entries(ThemeScenes.catalog).map(([key, value]) => [key, value]),
+    ),
+  );
   window.UniverseMessages = { occasions, tones };
 })();

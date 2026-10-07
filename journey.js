@@ -78,46 +78,56 @@
     const birthday =
       config.journey === "birthday" ||
       (config.journey !== "gentle" && config.holiday === "birthday");
-    const types = romantic
+    let types = romantic
       ? ["orbits", "tree", "heart", "flower", "name"]
       : birthday
         ? ["gift", "tree", "flower", "name"]
         : ["orbits", "tree", "flower", "name"];
     if (config.journey === "auto" && config.holiday === "newyear")
       types.splice(0, 1, "gift");
+    const themed =
+      config.journey === "auto" ? ThemeScenes.select(config) : null;
+    if (themed) types = [...themed, "name"];
     const personalType =
-      {
-        warmth: "sun",
-        together: "orbits",
-        support: "support",
-        dream: "path",
-        love: "heart",
-        respect: "balance",
-      }[config.scene] || "orbits";
+      config.holiday === "memorial"
+        ? "theme:candle"
+        : config.holiday === "newborn"
+          ? "theme:cradle"
+          : {
+              warmth: "sun",
+              together: "orbits",
+              support: "support",
+              dream: "path",
+              love: "heart",
+              respect: "balance",
+            }[config.scene] || "orbits";
     if (config.message) types.splice(types.length - 1, 0, "personal");
     types.forEach((entry, i) => {
       const personal = entry === "personal",
         type = personal ? personalType : entry;
+      const sceneCopy = type.startsWith("theme:")
+        ? ThemeScenes.scenes[type.slice(6)].slice(1)
+        : copy[type];
       const section = document.createElement("article");
       section.className = "journey-chapter";
       const eyebrow = document.createElement("p");
       eyebrow.className = "eyebrow";
       eyebrow.textContent = "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
       const h = document.createElement("h2");
-      h.textContent = personal ? "От меня — тебе" : copy[type][0];
+      h.textContent = personal ? "От меня — тебе" : sceneCopy[0];
       const text = document.createElement("p");
       text.className = "journey-copy";
-      text.textContent = personal ? config.message : copy[type][1];
+      text.textContent = personal ? config.message : sceneCopy[1];
       const stage = document.createElement("button");
       stage.type = "button";
       stage.className = "journey-stage";
-      stage.setAttribute("aria-label", copy[type][2]);
+      stage.setAttribute("aria-label", sceneCopy[2]);
       const canvas = document.createElement("canvas");
       canvas.setAttribute("aria-hidden", "true");
       stage.append(canvas);
       const hint = document.createElement("p");
       hint.className = "journey-hint";
-      hint.textContent = copy[type][2];
+      hint.textContent = sceneCopy[2];
       const replay = document.createElement("button");
       replay.type = "button";
       replay.className = "text-button";
@@ -231,6 +241,9 @@
 
       stage.onclick = () => {
         state.pulse = 1;
+        if (type === "theme:cake") state.clicked = !state.clicked;
+        else if (type.startsWith("theme:"))
+          state.time = Universe.paused ? 12 : 0;
         dirty = true;
         if (type === "gift") state.opened = !state.opened;
         else if (["flower", "path", "support"].includes(type))
@@ -240,6 +253,7 @@
       replay.onclick = () => {
         state.time = Universe.paused ? 12 : 0;
         state.opened = false;
+        state.clicked = false;
         state.pulse = 0;
         dirty = true;
         wake();
@@ -295,8 +309,8 @@
     g.clearRect(0, 0, 1000, 600);
     const t = Universe.reduced && Universe.paused ? 12 : s.time;
     const grad = g.createRadialGradient(500, 300, 0, 500, 300, 530);
-    grad.addColorStop(0, "#181730");
-    grad.addColorStop(1, "#040610");
+    grad.addColorStop(0, window.UniverseTheme?.canvasCenter || "#181730");
+    grad.addColorStop(1, window.UniverseTheme?.canvasEdge || "#040610");
     g.fillStyle = grad;
     g.fillRect(0, 0, 1000, 600);
     function dot(x, y, r, color, alpha = 1) {
@@ -330,6 +344,7 @@
     g.translate(s.x * 18, s.y * 12);
     g.shadowBlur = 12;
     g.shadowColor = "#a889ff";
+    if (s.type.startsWith("theme:")) ThemeScenes.draw(s.type.slice(6), s, t);
     if (s.type === "tree") {
       s.branches.forEach((b) => {
         const f = ease((t - b.start) / 0.9);

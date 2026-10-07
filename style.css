@@ -607,3 +607,103 @@ textarea::placeholder {
 html:fullscreen {
   background: #080913;
 }
+/* Topic identity is applied to the entire page, including the author preview. */
+body {
+  background: var(--page, #080913);
+}
+.paper {
+  background: linear-gradient(
+    140deg,
+    var(--card, #211b31),
+    var(--page, #121220)
+  );
+}
+.notes article,
+.inline-editor {
+  background: var(--card, #171426);
+}
+.primary {
+  background: var(--accent);
+  color: var(--page, #20142e);
+}
+.final-section {
+  background: radial-gradient(
+    ellipse at center,
+    var(--card, #392541),
+    transparent 72%
+  );
+}
+.theme-art #planet,
+.theme-art .planet-fallback {
+  display: none;
+}
+#theme-hero {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+body[data-theme="winter"] .paper,
+body[data-theme="winter"] .inline-editor {
+  border-color: #b3e9ee66;
+  box-shadow: 0 0 45px #8cd6dd0d;
+}
+body[data-theme="spring"] .paper {
+  border-radius: 45px 12px 45px 12px;
+}
+body[data-theme="romance"] .paper,
+body[data-theme="wedding"] .paper {
+  box-shadow: 0 10px 80px #ba7aab12;
+}
+body[data-theme="study"] h1,
+body[data-theme="study"] h2,
+body[data-theme="study"] h3 {
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+body[data-theme="study"] .paper {
+  background-image: repeating-linear-gradient(
+    transparent 0 35px,
+    #bed5ed0c 35px 36px
+  );
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+}
+body[data-theme="halloween"] .paper {
+  border: 1px solid #e0a86866;
+  box-shadow: 0 0 80px #bf764c0d;
+}
+body[data-theme="halloween"] h1,
+body[data-theme="halloween"] h2 {
+  text-shadow: 0 3px 20px #db8b5433;
+}
+body[data-theme="summer"] .paper {
+  border-color: #b3daca55;
+}
+body[data-theme="baby"] .paper,
+body[data-theme="baby"] .notes article {
+  border-radius: 35px;
+}
+body[data-theme="home"] .paper {
+  box-shadow: 0 20px 70px #d5ae8310;
+}
+body[data-theme="memory"] .primary {
+  background: none;
+  color: var(--accent);
+}
+body[data-theme="memory"] .hero {
+  min-height: 580px;
+}
+body[data-theme="calm"] h1,
+body[data-theme="memory"] h1 {
+  font-size: clamp(42px, 5.5vw, 70px);
+}
+.memory-light {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background: radial-gradient(ellipse at 50% 75%, #e4c89818, transparent 60%);
+}
