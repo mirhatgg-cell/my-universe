@@ -62,6 +62,7 @@
       return x * x * (3 - 2 * x);
     };
   function mount(config = {}) {
+    window.SceneExperience?.leave();
     observer?.disconnect();
     states = [];
     dirty = true;
@@ -298,6 +299,7 @@
         state.x = state.y = 0;
         wake();
       });
+      if(type.startsWith("pack:"))SceneExperience.attach(state,config,sceneCopy[0],wake,draw);
       states.push(state);
     });
     if (packed) {
@@ -312,6 +314,7 @@
         button.className = "secondary";
         button.textContent = ["1 · Объем", "2 · Рисунок", "3 · Бумага"][j];
         button.title = AnimationPacks.info(packed[j])[0];
+        const subtitle=document.createElement("small");subtitle.textContent=button.title;button.append(subtitle);
         button.onclick = () =>
           target.section.scrollIntoView({
             behavior: Universe.reduced ? "auto" : "smooth",
@@ -647,13 +650,13 @@
   let elapsed = 0;
   Universe.add((dt, now, paused) => {
     elapsed += dt;
-    const active = states.filter((s) => s.visible);
+    const active = states.filter((s) => s.visible && SceneExperience.isFocused(s));
     if (!active.length) return false;
     if (paused && !dirty) return false;
     if (!dirty && !paused && elapsed < 1 / 30) return true;
     active.forEach((s) => {
       if (!paused && !s.localPaused) {
-        s.time += elapsed;
+        s.time += elapsed * (s.rate || 1);
         if(s.loop&&s.time>=s.duration)s.time%=s.duration;
         s.pulse = Math.max(0, s.pulse - elapsed * 0.65);
       }

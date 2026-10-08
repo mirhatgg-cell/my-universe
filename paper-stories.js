@@ -3,7 +3,7 @@
 const descriptions={};
 function duration(topic,index){return ['custom:0','september:1','nauryz:0','wedding:2'].includes(topic+':'+index)?28:22;}
 function draw(s,t,topic,index){const g=s.ctx,p=clamp(t/duration(topic,index)),q=(a,b)=>ease((p-a)/(b-a)),C={red:'#bb7474',blue:'#719cae',gold:'#c6a05c',green:'#789880',white:'#f4eee1',brown:'#9a795d',ink:'#4c535d',purple:'#9d8fae'},key=topic+':'+index;s.rigs=[];s.paperStory=key;
- g.save();g.globalAlpha=1;g.shadowBlur=0;g.fillStyle='#e8dfce';g.fillRect(0,0,1000,600);g.lineJoin='round';g.lineCap='round';
+ g.save();g.globalAlpha=1;g.shadowBlur=0;g.fillStyle='#e8dfce';g.fillRect(0,0,1000,600);SceneSetting.draw(g,t,topic,index,'paper');g.lineJoin='round';g.lineCap='round';
  function cut(pts,c){g.save();g.beginPath();pts.forEach((v,i)=>i?g.lineTo(...v):g.moveTo(...v));g.closePath();g.shadowColor='#69554030';g.shadowOffsetY=3;g.shadowBlur=2;g.fillStyle=c;g.fill();g.shadowBlur=0;g.shadowOffsetY=0;g.strokeStyle='#564e4533';g.lineWidth=.8;g.stroke();g.restore();}
  function line(x,y,xx,yy,c=C.ink,w=2){g.strokeStyle=c;g.lineWidth=w;g.beginPath();g.moveTo(x,y);g.lineTo(xx,yy);g.stroke();}
  function rect(x,y,w,h,c){cut([[x,y],[x+w,y],[x+w,y+h],[x,y+h]],c);}
