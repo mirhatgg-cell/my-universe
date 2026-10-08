@@ -162,8 +162,21 @@
       );
     updateComposition();
   }
-  let panel = null,
-    lastPreview = "";
+  let panel = null, lastPreview = "", previewStates=[], previewVisible=false, previewElapsed=0, previewDirty=true;
+  function renderPreview(state){
+    const g=state.ctx;g.setTransform(.3,0,0,.3,0,0);g.clearRect(0,0,1000,600);
+    g.fillStyle=window.UniverseTheme?.canvasCenter||"#1b2034";g.fillRect(0,0,1000,600);
+    AnimationPacks.draw(state,Universe.reduced&&Universe.paused?AnimationPacks.duration(state.type):state.time);
+  }
+  Universe.add((dt,now,paused)=>{
+    if(!panel||panel.hidden||!previewVisible||!previewStates.length)return false;
+    if(paused&&!previewDirty)return false;
+    previewElapsed+=dt;
+    if(!previewDirty&&!paused&&previewElapsed<1/15)return true;
+    for(const state of previewStates){if(!paused)state.time=(state.time+previewElapsed)%AnimationPacks.duration(state.type);renderPreview(state);}
+    previewElapsed=0;previewDirty=false;return !paused;
+  });
+  document.addEventListener('motion-change',()=>{previewDirty=true;Universe.wake();});
   const previewDots = Array.from({ length: 1000 }, (_, i) => ({
     a: i * 2.399,
     s: ((i * 47) % 997) / 997,
@@ -186,18 +199,23 @@
       panel.className = "pack-composition";
       panel.setAttribute("aria-label", "Состав выбранного набора");
       document.getElementById("pack-description").after(panel);
+      if('IntersectionObserver' in window){
+        const observer=new IntersectionObserver(entries=>{
+          previewVisible=entries[0].isIntersecting;previewElapsed=0;previewDirty=true;Universe.wake();
+        },{threshold:.05});observer.observe(panel);
+      }else previewVisible=true;
     }
     const ids = AnimationPacks.select(cfg);
     panel.hidden = !ids;
     if (!ids) {
-      lastPreview = "";
+      lastPreview = "";previewStates=[];
       return;
     }
     const signature =
       ids.join("|") + "|" + document.getElementById("to-input").value;
     if (signature === lastPreview) return;
     lastPreview = signature;
-    panel.replaceChildren();
+    panel.replaceChildren();previewStates=[];previewElapsed=0;previewDirty=true;
     ids.forEach((id, j) => {
       const card = document.createElement("article"),
         canvas = document.createElement("canvas"),
@@ -215,22 +233,11 @@
       panel.append(card);
       const g = canvas.getContext("2d");
       if (g) {
-        g.setTransform(0.3, 0, 0, 0.3, 0, 0);
-        g.fillStyle = window.UniverseTheme?.canvasCenter || "#1b2034";
-        g.fillRect(0, 0, 1000, 600);
-        AnimationPacks.draw(
-          {
-            ctx: g,
-            type: id,
-            name: document.getElementById("to-input").value || "Для тебя",
-            dots: previewDots,
-            x: 0,
-            y: 0,
-          },
-          12,
-        );
+        const state={ctx:g,type:id,name:document.getElementById('to-input').value||'Для тебя',dots:previewDots,x:0,y:0,time:0};
+        previewStates.push(state);renderPreview(state);
       }
     });
+    Universe.wake();
   }
   document.addEventListener("letter-rendered", (e) => apply(e.detail));
   document.addEventListener("theme-preview", (e) => apply(e.detail));

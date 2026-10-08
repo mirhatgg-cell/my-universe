@@ -10,7 +10,7 @@
       },
       {
         title: "Тепло вокруг",
-        volume: "Острова над облаками",
+        volume: "Сад на подъёмных платформах",
         paper: "Солнечный зонтик",
       },
       {
@@ -22,7 +22,7 @@
     friendship: [
       {
         title: "Поддержка в движении",
-        volume: "Эстафета шариков",
+        volume: "Шарики на качающихся лотках",
         paper: "Ладони из бумаги",
       },
       {
@@ -45,7 +45,7 @@
       {
         title: "Время для своего",
         volume: "Песочные часы",
-        paper: "Оригами-лиса",
+        paper: "Бумажная лиса",
       },
       {
         title: "Галерея добрых слов",
@@ -83,7 +83,7 @@
       },
       {
         title: "Новый уровень дружбы",
-        volume: "Скейт над рампой",
+        volume: "Скейт на рампе",
         paper: "Комикс о победе",
       },
     ],
@@ -113,7 +113,7 @@
       {
         title: "Быть ближе",
         volume: "Маятники притяжения",
-        paper: "Письмо складывается в сердце",
+        paper: "Сердце из письма",
       },
       {
         title: "Вдвоем под одним небом",
@@ -152,7 +152,7 @@
       {
         title: "Ночь новых надежд",
         volume: "Часы полуночи",
-        paper: "Снеговик из бумажных кругов",
+        paper: "Лепим снеговика вместе",
       },
     ],
     september: [
@@ -395,7 +395,7 @@
   }
   function volume(s, t, topic, index) {
     const g = s.ctx,
-      p = ease(t / (topic === "memorial" ? 11 : 8)),
+      p = clamp(t / (topic === "memorial" ? 11 : 8)),
       q = (a, b) => ease((p - a) / (b - a)),
       clock = t,
       faces = [];
@@ -415,7 +415,7 @@
     const yaw =
         0.37 +
         s.x * 0.28 +
-        Math.sin(clock * 0.22) * (topic === "memorial" ? 0.025 : 0.1),
+        0,
       pitch = -0.29 + s.y * 0.12;
     function view([x, y, z]) {
       const a = x * Math.cos(yaw) + z * Math.sin(yaw),
@@ -482,8 +482,9 @@
           n.reduce((a, v, i) => a + v * (center[i] - groupPos[i]), 0) < 0
         )
           n = n.map((x) => -x);
-        const nv = view(n),
-          lit = Math.max(0, nv[0] * -0.43 + nv[1] * 0.72 + nv[2] * -0.55),
+        const nv = view(n), vc=view(center);
+        if(alpha>=.999 && orient && nv[0]*vc[0]+nv[1]*vc[1]+nv[2]*(vc[2]+1000)>=0)continue;
+        const lit = Math.max(0, nv[0] * -0.43 + nv[1] * 0.72 + nv[2] * -0.55),
           shine =
             Math.max(0, nv[0] * -0.2 + nv[1] * 0.36 + nv[2] * -0.91) ** 22;
         const screen = pts.map(proj);
@@ -562,9 +563,11 @@
       alpha = 1,
       scale = [1, 1, 1],
       rot = [0, 0, 0],
-      n = fine ? 12 : 10,
-      m = fine ? 8 : 6,
+      n = 0,
+      m = 0,
     ) {
+      n=n || (r<10?6:r<25?8:fine?16:12);
+      m=m || (r<10?4:r<25?5:fine?10:8);
       const v = [],
         ids = [];
       for (let j = 0; j <= m; j++) {
@@ -581,7 +584,11 @@
       for (let j = 0; j < m; j++)
         for (let i = 0; i < n; i++) {
           const k = (i + 1) % n;
-          ids.push([j * n + i, j * n + k, (j + 1) * n + k, (j + 1) * n + i]);
+          ids.push(j === 0
+            ? [j*n+i, (j+1)*n+k, (j+1)*n+i]
+            : j === m-1
+              ? [j*n+i, j*n+k, (j+1)*n+i]
+              : [j*n+i, j*n+k, (j+1)*n+k, (j+1)*n+i]);
         }
       mesh(v, ids, [x, y, z], c, alpha, rot);
     }
@@ -673,7 +680,7 @@
       );
     }
     function tree(x, z, h = 150, c = C.green, base = -150) {
-      cylinder(x, base + h * 0.18, z, 7, h * 0.4, C.wood);
+      cylinder(x, base + h * 0.2, z, 7, h * 0.4, C.wood);
       for (let j = 0; j < 3; j++)
         cylinder(
           x,
@@ -694,7 +701,7 @@
           [0, h * 0.55],
           [w * 0.6, 0],
         ],
-        [x, -150 + h, z - w * 0.43],
+        [x, -150 + h, z],
         C.rose,
         1,
         [0, 0, 0],
@@ -713,15 +720,28 @@
         );
       box(x, -150 + h * 0.2, z - w * 0.41 - 2, w * 0.18, h * 0.4, 4, C.wood);
     }
+    function openBox(x, y, z, w, h, d, color, wall = 7) {
+      box(x,y-h/2+wall/2,z,w,wall,d,color);
+      box(x-w/2+wall/2,y,z,wall,h,d,color);
+      box(x+w/2-wall/2,y,z,wall,h,d,color);
+      box(x,y,z-d/2+wall/2,w-wall*2,h,wall,color);
+      box(x,y,z+d/2-wall/2,w-wall*2,h,wall,color);
+    }
+    function hand(cx,cy,z,len,width,angle,color) {
+      const end = [cx-Math.sin(angle)*len,cy+Math.cos(angle)*len,z];
+      segment([cx,cy,z],end,width,color);
+      sphere(cx,cy,z,width*1.7,color);
+    }
     function bowl(x, y, z, r, c) {
       cylinder(x, y, z, r * 0.72, 45, c, 1, r);
       torus(x, y + 23, z, r, 3, C.ivory);
     }
     function cup(x, y, z, r = 43, c = C.blue) {
       cylinder(x, y, z, r, 66, c, 1, r * 0.9);
-      cylinder(x, y + 34, z, r * 0.79, 2, C.wood);
-      torus(x + r * 0.92, y + 4, z, 22, 5, c, 1, [Math.PI / 2, 0, 0]);
-      torus(x, y - 35, z, r + 8, 3, C.ivory);
+      cylinder(x, y + 32.1, z, r * 0.79, 1, C.wood);
+      torus(x, y + 33, z, r * .86, r * .045, c);
+      torus(x + r + 12, y + 4, z, 22, 5, c, 1, [Math.PI / 2, 0, 0]);
+      cylinder(x, y - 36, z, r + 30, 6, C.ivory);
     }
     function steam(x, y, z, strength = 1) {
       for (let j = 0; j < 9; j++) {
@@ -745,15 +765,16 @@
           h = 50 + (j % 3) * 14;
         segment([xx, y, zz], [xx, y + h, zz], 1.5, C.green);
         for (let k = 0; k < 5; k++) {
-          const b = (k * TAU) / 5;
+          const b = (k * TAU) / 5, open=q(.12+j*.035,.6+j*.035);
           sphere(
-            xx + Math.cos(b) * 9,
-            y + h,
-            zz + Math.sin(b) * 9,
+            xx + Math.cos(b) * (2+7*open),
+            y + h+6*(1-open),
+            zz + Math.sin(b) * (2+7*open),
             8,
             j % 2 ? C.rose : C.gold,
             1,
             [1, 0.4, 1],
+            [(1-open)*Math.PI/2,b,0],
           );
         }
         sphere(xx, y + h + 2, zz, 4, C.gold);
@@ -770,15 +791,19 @@
     grd.addColorStop(1, "#00000000");
     g.fillStyle = grd;
     g.fillRect(170, 270, 660, 290);
-    cylinder(0, -165, 0, 265, 12, "#354656", 0.7, 265, [0, 0, 0], 48);
+    cylinder(0, -156, 0, topic==="newborn"&&index===2?315:265, 12, "#354656", 0.7, topic==="newborn"&&index===2?315:265, [0, 0, 0], 48);
     const k = q(0, 0.38),
       a = q(0.2, 0.75),
       b = q(0.6, 1),
       rot = clock * 0.12;
     switch (topic + ":" + index) {
       case "just:0": {
-        box(0, -110, 0, 190, 75, 130, C.wood);
-        box(0, -61, 58, 194, 12, 135, C.gold, 1, [-a * 1.15, 0, 0]);
+        cylinder(0,-147,0,115,6,C.wood);
+        openBox(0, -112.5, 0, 190, 75, 130, C.wood);
+        groupOrigin = [0,-69,65]; groupRotation = [a*1.65,0,0];
+        box(0,-69,0,194,12,135,C.gold);
+        groupRotation = [0,0,0]; groupOrigin = [0,0,0];
+        groupOffset = [0,-65+65*q(.4,.85),0];
         cylinder(0, -58, 0, 46, 7, C.violet);
         sphere(0, 2, 0, 24, C.ivory, 1, [1.3, 0.7, 0.65]);
         plate(
@@ -810,6 +835,7 @@
         for (let j = 0; j < 3; j++) {
           const x = -150 + j * 150,
             y = -25 + Math.sin(clock * 0.6 + j) * 12;
+          segment([x,-150,40-j*35],[x,y-31,40-j*35],5,C.gold);
           cylinder(x, y, 40 - j * 35, 55, 60, C.wood, 1, 80);
           cylinder(x, y + 35, 40 - j * 35, 82, 9, C.green);
           tree(x, 40 - j * 35, 65 + j * 12, C.green, y + 40);
@@ -827,28 +853,16 @@
         break;
       }
       case "just:2": {
-        cup(0, -93, 0, 55, C.rose);
-        steam(0, -50, 0, a);
+        cup(0, -111, 0, 55, C.rose);
+        steam(0,-73,0,1);
         box(125, -145, 15, 65, 9, 55, C.wood);
         for (let j = 0; j < 3; j++)
           box(113 + j * 13, -138, 15, 9, 5, 35, C.gold);
-        torus(0, -129, 0, 92, 4, C.ivory);
+        torus(0, -146, 0, 88, 3, C.ivory);
         break;
       }
       case "friendship:0": {
-        for (let j = 0; j < 3; j++) {
-          const x = -155 + j * 155;
-          box(x, -135, 0, 110, 20, 70, j % 2 ? C.blue : C.wood);
-          segment([x - 50, -120, 0], [x + 55, -104, 0], 3, C.gold);
-          const u = (clock * 0.17 + j / 3) % 1;
-          sphere(
-            x - 45 + 100 * u,
-            -99 + 16 * u + Math.sin(u * Math.PI) * 50,
-            0,
-            12,
-            j % 2 ? C.gold : C.rose,
-          );
-        }
+        for(let j=0;j<3;j++){const x=-155+j*155,angle=Math.sin(clock*.8+j)*.13;box(x,-143,0,115,14,70,C.wood);cylinder(x,-124,0,7,25,C.gold);groupOrigin=[x,-110,0];groupRotation=[0,0,angle];box(x,-110,0,110,5,36,C.blue);for(const dir of [-1,1])box(x+dir*55,-98,0,4,20,36,C.gold);const bx=x+42*Math.sin(clock*.8+j-Math.PI/2);sphere(bx,-95.5,0,12,C.rose);groupOrigin=[0,0,0];groupRotation=[0,0,0];}
         break;
       }
       case "friendship:1": {
@@ -883,16 +897,18 @@
       }
       case "friendship:2": {
         box(0, -10, 40, 300, 12, 30, C.wood);
-        for (const x of [-110, 110]) {
-          box(x, -79, 40, 13, 152, 18, C.wood);
+        for (const x of [-88, 88]) {
+          box(x, -78, 40, 13, 144, 18, C.wood);
           torus(x, -4, 10, 25, 6, C.gold, 1, [Math.PI / 2, 0, 0]);
-          segment([x, -24, 10], [x, -125 + 80 * a, 10], 2, C.ivory);
+          segment([x, -24, 10], [x, -118.5 + 80 * a, 10], 2, C.ivory);
         }
         box(0, -126 + 80 * a, 10, 190, 15, 80, C.blue);
+        for(const x of [-88,88]){segment([x,21,10],[x+28,21,10],2,C.ivory);segment([x+28,21,10],[x+28,-35-80*a,10],2,C.ivory);box(x+28,-45-80*a,10,15,20,15,C.wood);}
         star(0, -90 + 80 * a, 10, 25, C.gold);
         break;
       }
       case "custom:0": {
+        cylinder(0,-140,0,85,20,C.wood);segment([0,-130,0],[0,-85,0],5,C.gold);box(-220,75,-30,32,30,35,C.dark);
         plate(
           [
             [-90, -85],
@@ -924,7 +940,7 @@
         break;
       }
       case "custom:1": {
-        cylinder(0, -140, 0, 86, 12, C.wood);
+        cylinder(0, -144, 0, 86, 12, C.wood);
         cylinder(0, 140, 0, 86, 12, C.wood);
         for (let j = 0; j < 4; j++) {
           const u = (j * TAU) / 4;
@@ -937,44 +953,34 @@
         }
         cylinder(0, 62, 0, 3, 132, C.blue, 0.09, 60);
         cylinder(0, -66, 0, 62, 132, C.blue, 0.09, 3);
-        cylinder(
-          0,
-          95 + 35 * a,
-          0,
-          50 * (1 - a) + 1,
-          20 + 25 * (1 - a),
-          C.gold,
-        );
-        cylinder(0, -127 + 30 * a, 0, 20 + 35 * a, 35 * a + 0.1, C.gold, 1, 1);
-        for (let j = 0; j < 14; j++)
-          sphere(
-            0,
-            50 - ((clock * 45 + j * 12) % 166),
-            0,
-            2,
-            C.gold,
-            0.8 * (1 - a),
-          );
+        const flow=q(.05,.94),top=Math.cbrt(1-flow),bottom=Math.cbrt(flow);
+        cylinder(0,3+62*top,0,.01,124*top+.01,C.gold,1,60*top+.01);
+        cylinder(0,-132+62*bottom,0,60*bottom+.01,124*bottom+.01,C.gold,1,.01);
+        if(flow<1)for(let j=0;j<18;j++){const y=-((clock*90+j*7)%125);sphere(0,y,0,1.5,C.gold);}
         break;
       }
       case "custom:2": {
         for (let j = 0; j < 3; j++) {
           const x = -155 + j * 155;
+          cylinder(x,-147,0,40,6,C.wood);
           box(x, -100, 0, 10, 100, 10, C.gold);
+          groupOrigin=[x,15,0]; groupRotation=[0,Math.sin(rot+j)*.25,0];
           box(x, 15, 0, 105, 135, 8, C.wood, 1, [
             0,
-            Math.sin(rot + j) * 0.25,
+            0,
             0,
           ]);
           star(x, 20, -10, 27, [C.rose, C.blue, C.gold][j], 1, [
             0,
-            Math.sin(rot + j) * 0.25,
+            0,
             0,
           ]);
+          groupOrigin=[0,0,0];groupRotation=[0,0,0];
         }
         break;
       }
       case "birthday:0": {
+        cylinder(0,-140.5,0,85,19,C.ivory);
         cylinder(0, -125, 0, 120, 12, C.ivory);
         cylinder(0, -76, 0, 98, 87, C.rose);
         cylinder(0, -31, 0, 99, 7, C.ivory);
@@ -998,10 +1004,11 @@
             z,
             7,
             C.orange,
-            a,
+            q(.1+j*.12,.12+j*.12),
             [0.5, 1.7, 0.5],
           );
         }
+        if(p<.72){const j=Math.min(4,Math.floor(clamp((p-.08)/.64)*5)),u=j*TAU/5,x=Math.cos(u)*45,z=Math.sin(u)*45;segment([x+15,38,z],[x+65,75,z],4,C.wood);sphere(x+11,38,z,4,C.orange);}
         torus(0, -128, 0, 135, 4, C.gold);
         break;
       }
@@ -1016,8 +1023,8 @@
             -u,
           ]);
         }
-        box(0, 35, -12, 7, 70, 4, C.gold, 1, [0, 0, -a * TAU]);
-        box(24, 15, -16, 7, 60, 4, C.rose, 1, [0, 0, -a * Math.PI]);
+        hand(0,0,-12,70,3.5,-a*TAU,C.gold);
+        hand(0,0,-16,49,3.5,-a*TAU/12,C.rose);
         for (let j = 0; j < 3; j++)
           torus(-160 + j * 155, -105, 60, 30, 6, C.violet, 1, [
             Math.PI / 2,
@@ -1027,46 +1034,43 @@
         break;
       }
       case "birthday:2": {
-        box(0, -90, 0, 135, 110, 135, C.rose);
-        box(0, -31 + 130 * a, 0, 143, 12, 143, C.gold, 1, [
-          a * 0.35,
-          rot * a,
-          0,
-        ]);
-        box(0, -20 + 45 * b, 0, 76, 72, 76, C.blue, b);
-        box(0, 22 + 80 * b, 0, 80, 8, 80, C.ivory, b);
-        star(0, 82 + 55 * b, 0, 28, C.gold, b, [0, rot, 0]);
-        for (const x of [-48, 48]) box(x, -90, -68, 8, 110, 3, C.ivory);
+        openBox(0,-95,0,135,110,135,C.rose);for(const x of [-48,48])box(x,-90,-68,8,110,3,C.ivory);
+        groupOrigin=[0,-31,71];groupRotation=[q(.06,.4)*1.7,0,0];box(0,-31,0,143,12,143,C.gold);groupOrigin=[0,0,0];groupRotation=[0,0,0];
+        openBox(0,-94,0,76,72,76,C.blue);groupOrigin=[0,-54,40];groupRotation=[q(.48,.88)*1.7,0,0];box(0,-54,0,80,8,80,C.ivory);groupOrigin=[0,0,0];groupRotation=[0,0,0];star(0,-88,0,24,C.gold,1,[0,0,0]);
         break;
       }
       case "friendbirthday:0": {
+        for (const x of [-145,145]) for(const z of [-78,78]) box(x,-118,z,15,64,15,C.wood);
         box(0, -70, 0, 350, 32, 210, C.wood);
         box(0, -50, 0, 320, 8, 180, C.green);
         for (const z of [-98, 98]) box(0, -37, z, 345, 27, 6, C.wood);
         for (let j = 0; j < 4; j++) {
           const z = -66 + j * 44;
-          segment([-185, -24, z], [185, -24, z], 3, C.gold);
+          segment([-185, -12, z], [185, -12, z], 3, C.gold);
           for (let n = 0; n < 3; n++) {
             const x = -95 + n * 95,
               angle = Math.sin(clock * 0.8 + j) * 0.32;
-            box(x, -34, z, 14, 25, 12, j % 2 ? C.rose : C.blue, 1, [
-              angle,
+            groupOrigin=[x,-12,z];groupRotation=[angle,0,0];
+            box(x, -23, z, 14, 25, 12, j % 2 ? C.rose : C.blue, 1, [
+              0,
               0,
               0,
             ]);
-            sphere(x, -14, z, 6, C.ivory);
+            sphere(x, 1, z, 6, C.ivory);
+            groupOrigin=[0,0,0];groupRotation=[0,0,0];
           }
         }
         sphere(
-          Math.sin(clock * 0.8) * 120,
+          Math.sin(clock * 0.8) * 125,
           -37,
-          Math.cos(clock * 1.1) * 65,
+          -44 + 5*Math.sin(clock*1.6),
           9,
           C.ivory,
         );
         break;
       }
       case "friendbirthday:1": {
+        cylinder(0,-99,0,80,102.5,C.wood);
         cylinder(0, -35, 0, 120, 25, C.gold);
         cylinder(0, -20, 0, 112, 3, C.dark);
         plate(
@@ -1078,7 +1082,7 @@
           [0, -10, 0],
           C.rose,
           1,
-          [Math.PI / 2, rot + Math.sin(clock * 0.4) * 0.7, 0],
+          [Math.PI / 2, Math.sin(clock*2.1)*Math.exp(-clock*.32)*1.1, 0],
         );
         torus(0, -18, 0, 118, 5, C.ivory);
         for (let j = 0; j < 16; j++) {
@@ -1092,37 +1096,35 @@
         break;
       }
       case "friendbirthday:2": {
-        box(0, -151, 0, 370, 8, 170, C.wood);
-        const u = q(0.1, 0.92),
-          x = -150 + 300 * u,
-          ramp = -100 + ((u - 0.5) / 0.5) ** 2 * 70,
-          y = ramp + 17 + Math.sin(u * Math.PI) * 110;
-        box(x, y, 0, 90, 8, 28, C.blue, 1, [
-          0,
-          0,
-          Math.cos(u * Math.PI) * 0.18,
-        ]);
-        for (const z of [-16, 16])
-          for (const xx of [-28, 28]) sphere(x + xx, y - 10, z, 7, C.dark);
-        for (let j = 0; j < 10; j++) {
-          const z = (j - 4.5) / 4.5;
-          box(-157.5 + j * 35, -100 + z * z * 70, 0, 36, 7, 130, C.gold, 1, [
-            0,
-            0,
-            z * 0.65,
-          ]);
+        box(0,-146,0,400,8,170,C.wood);
+        const radius=290, surface=x=>-113+x*x/(2*radius);
+        for(let j=0;j<32;j++){
+          const x=-200+(j+.5)*12.5, slope=Math.atan(x/radius);
+          box(x,surface(x),0,12.5/Math.cos(slope)+.25,5,130,C.gold,1,[0,0,slope]);
+          if(j%4===0){const top=surface(x)-3;box(x,(-142+top)/2,0,7,top+142,90,C.wood);}
+        }
+        const u=.5-.5*Math.cos(clock*.8),x=-158+316*u;
+        // Front/rear axle contacts define a chord across the curved ramp.
+        const angle=Math.atan(x/radius),lift=0;
+        const h=surface(x)+2.5+7+10+28*28/(2*radius)+lift;
+        groupOrigin=[0,0,0];groupOffset=[x,h,0];groupRotation=[0,0,angle];
+        box(0,0,0,90,7,30,C.blue);
+        for(const axle of [-28,28]){
+          segment([axle,-10,-20],[axle,-10,20],2,C.gold);
+          box(axle,-6,0,7,7,13,C.gold);
+          for(const z of [-18,18])cylinder(axle,-10,z,7,5,C.dark,1,7,[Math.PI/2,0,0],14);
         }
         break;
       }
       case "march:0": {
-        cylinder(0, -119, 0, 55, 70, C.blue, 0.7, 27);
+        cylinder(0, -115, 0, 55, 70, C.blue, 0.7, 27);
         segment([0, -80, 0], [0, 60, 0], 3, C.green);
         for (let j = 0; j < 9; j++) {
-          const u = (j * TAU) / 9 + rot;
+          const u = (j * TAU) / 9;
           sphere(
-            Math.cos(u) * 40 * a,
+            Math.cos(u) * (12+28*a),
             65 + Math.sin(u * 2) * 5,
-            Math.sin(u) * 40 * a,
+            Math.sin(u) * (12+28*a),
             28,
             C.rose,
             0.9,
@@ -1141,7 +1143,7 @@
             x = Math.cos(u) * (30 + 10 * a) + Math.sin(clock + j) * 8,
             z = Math.sin(u) * 30,
             y = 65 + (j % 3) * 18;
-          segment([0, -18, 0], [x, y, z], 2, C.green);
+          segment([0, -30, 0], [x, y, z], 2, C.green);
           for (let n = 0; n < 5; n++) {
             const v = (n * TAU) / 5;
             sphere(
@@ -1158,19 +1160,20 @@
         break;
       }
       case "march:2": {
+        groupOffset=[0,-12,0];
         box(0, -58, 0, 105, 160, 65, C.blue, 0.8);
         box(0, 30, 0, 60, 18, 45, C.gold);
         cylinder(0, 50, 0, 24, 25, C.dark);
         sphere(0, 77, 0, 15, C.gold, 1, [1, 0.4, 1]);
         for (let j = 0; j < 16; j++) {
-          const u = j * 2.4 + rot;
+          const age=(clock*.4+j/16)%1,u=j*2.4;
           sphere(
-            Math.cos(u) * 100,
-            80 + j * 3 + Math.sin(clock + j) * 8,
-            Math.sin(u) * 60,
+            Math.cos(u) * 95*age,
+            80+age*85,
+            Math.sin(u)*60*age,
             3,
             C.rose,
-            a,
+            (1-age)*.8,
           );
         }
         box(0, -58, -34, 53, 68, 3, C.ivory);
@@ -1178,18 +1181,19 @@
         break;
       }
       case "romance:0": {
+        cylinder(0,-145,20,110,10,C.wood);segment([0,-140,20],[0,-80,20],4,C.gold);
         torus(0, 2, 0, 88, 8, C.gold, 1, [Math.PI / 2, 0, 0]);
         cylinder(0, 2, 0, 83, 8, C.rose, 1, 83, [Math.PI / 2, 0, 0]);
         cylinder(
           -85 + 85 * Math.cos(a * 1.8),
           2,
-          -85 * Math.sin(a * 1.8),
+          85 * Math.sin(a * 1.8),
           83,
           8,
           C.gold,
           1,
           83,
-          [Math.PI / 2, a * 1.8, 0],
+          [Math.PI / 2, -a * 1.8, 0],
         );
         const pts = Array.from({ length: 48 }, (_, j) => {
           const u = (j * TAU) / 48;
@@ -1210,36 +1214,38 @@
         box(0, 130, 0, 260, 13, 45, C.wood);
         for (let j = 0; j < 2; j++) {
           const x = j ? 75 : -75,
-            angle = (j ? -1 : 1) * (0.22 - Math.sin(clock * 0.65) * 0.12) * a,
+            angle = (j ? -1 : 1) * Math.cos(clock*.65)*.24*Math.exp(-clock*.025),
             xx = x + Math.sin(angle) * 130,
             yy = 130 - Math.cos(angle) * 130;
-          segment([x, 130, 0], [xx, yy, 0], 2, C.gold);
+          segment([x, 130, 0], [x+Math.sin(angle)*102,130-Math.cos(angle)*102,0], 2, C.gold);
           sphere(xx, yy, 0, 28, j ? C.rose : C.blue);
           torus(x, 125, 0, 9, 3, C.gold, 1, [Math.PI / 2, 0, 0]);
         }
-        for (const x of [-130, 130]) box(x, -10, 0, 10, 270, 35, C.wood);
+        for (const x of [-130, 130]) box(x, -7, 0, 10, 286, 35, C.wood);
         break;
       }
       case "romance:2": {
-        box(0, -148, 0, 350, 8, 195, C.wood);
+        box(0, -146, 0, 350, 8, 195, C.wood);
         for (const x of [-85, 85]) {
-          box(x, -113, 0, 58, 10, 58, C.gold);
+          box(x, -135, 0, 58, 14, 58, C.gold);
           for (const dx of [-25, 25])
-            for (const z of [-25, 25]) box(x + dx, -35, z, 4, 150, 4, C.gold);
+            for (const z of [-25, 25]) box(x + dx, -44, z, 4, 168, 4, C.gold);
           box(x, -35, -26, 48, 136, 1, C.blue, 0.055);
           box(x, -35, 26, 48, 136, 1, C.blue, 0.055);
+          cylinder(x,-105,0,13,46,C.ivory);
           sphere(
             x,
-            -28 + Math.sin(clock * 1.4) * 1.5,
+            -71 + Math.sin(clock * 1.4) * 1.5,
             0,
             15,
             C.orange,
             a,
             [0.45, 1.6, 0.45],
           );
-          cylinder(x, 47, 0, 47, 25, C.wood, 1, 12);
-          torus(x, 71, 0, 13, 3, C.gold, 1, [Math.PI / 2, 0, 0]);
+          cylinder(x, 52.5, 0, 47, 25, C.wood, 1, 12);
+          torus(x, 81, 0, 13, 3, C.gold, 1, [Math.PI / 2, 0, 0]);
         }
+        for(let j=0;j<13;j++)segment([-150+j*23,120-Math.sin(j/13*Math.PI)*40,15],[-127+j*23,120-Math.sin((j+1)/13*Math.PI)*40,15],1,C.wood);
         for (let j = 0; j < 14; j++)
           sphere(
             -150 + j * 23,
@@ -1264,7 +1270,7 @@
       }
       case "may7:1": {
         groupOffset = [-70 + 140 * a, -30 + 60 * a, 0];
-        sphere(0, 20, 0, 45, C.ivory, 1, [3, 0.35, 0.5], [0, rot * 0.2, 0.07]);
+        sphere(0, 20, 0, 45, C.ivory, 1, [3, 0.35, 0.5], [0,0,0]);
         plate(
           [
             [-60, -10],
@@ -1289,6 +1295,7 @@
           1,
           [Math.PI / 2, 0, 0],
         );
+        groupOrigin=[115,20,0];groupRotation=[clock*15,0,0];box(115,20,0,3,66,5,C.gold);groupOrigin=[0,0,0];groupRotation=[0,0,0];
         sphere(70, 30, 0, 16, C.dark, 1, [1, 0.3, 0.5]);
         for (let j = 0; j < 10; j++)
           sphere(-180 - j * 8, 18, 0, 2, C.ivory, a * (1 - j / 10));
@@ -1310,17 +1317,18 @@
         break;
       }
       case "newyear:0": {
-        cylinder(0, -120, 0, 112, 44, C.wood);
+        cylinder(0, -130, 0, 112, 40, C.wood);
         glassSphere(0, 10, 0, 140);
-        tree(0, 15, 145);
-        cylinder(0, -92, 0, 97, 8, C.ivory);
+        tree(0,15,130,C.green,-108);
+        cylinder(0, -112, 0, 85, 8, C.ivory);
         for (let j = 0; j < 50; j++) {
           const d = s.dots[j],
             u = j * 2.4;
+          const sy=Math.max(-106,120-j*4.3-clock*13), rr=Math.sqrt(Math.max(0,132*132-(sy-10)**2))*d.r;
           sphere(
-            Math.cos(u) * 100 * d.r,
-            -80 + ((clock * 10 + j * 13) % 200),
-            Math.sin(u) * 100 * d.r,
+            Math.cos(u)*rr,
+            sy,
+            Math.sin(u)*rr,
             1.6,
             C.ivory,
             0.6,
@@ -1332,7 +1340,7 @@
         for (let j = 0; j < 4; j++) {
           const r = 110 - j * 24,
             y = -95 + j * 58;
-          cylinder(0, y, 0, r, 77, C.blue, 0.83, 0, [0, rot * 0.25, 0], 6);
+          cylinder(0, y, 0, r, 77, C.blue, 0.83, 0, [0,0,0], 6);
           for (let z = 0; z < 8; z++) {
             const u = (z * TAU) / 8;
             star(
@@ -1340,51 +1348,55 @@
               y - 8,
               Math.sin(u) * r * 0.7,
               6,
-              C.gold,
-              a,
+              shade(C.gold,.82+.18*Math.sin(clock*2+z)),
+              1,
               [0, -u, 0],
             );
           }
         }
-        star(0, 138, 0, 24, C.gold, b, [0, rot, 0]);
+        star(0, 138, 0, 24,C.gold,1,[0,0,0]);
         break;
       }
       case "newyear:2": {
         box(0, 0, 0, 210, 235, 75, C.wood);
         cylinder(0, 10, -41, 85, 5, C.dark, 1, 85, [Math.PI / 2, 0, 0]);
         torus(0, 10, -44, 88, 5, C.gold, 1, [Math.PI / 2, 0, 0]);
-        box(0, 42, -49, 5, 64, 3, C.ivory, 1, [0, 0, -a * TAU]);
-        box(16, 27, -51, 5, 45, 3, C.gold, 1, [0, 0, (-a * Math.PI) / 2]);
-        sphere(0, -115, 0, 23, C.gold, 1, [1, 1, 0.35]);
-        segment([0, -78, 0], [Math.sin(clock * 0.9) * 24, -115, 0], 2, C.gold);
+        hand(0,10,-49,64,2.5,-a*TAU,C.ivory);
+        hand(0,10,-51,45,2.5,-a*TAU/12,C.gold);
+        box(-78,-133.75,0,23,32.5,50,C.wood);box(78,-133.75,0,23,32.5,50,C.wood);
+        const theta=Math.sin(clock*.9)*.28,px=Math.sin(theta)*50,py=-65-Math.cos(theta)*50;
+        segment([0,-65,-47],[px,py,-47],2,C.gold);
+        sphere(px,py,-47,19,C.gold,1,[1,1,.35]);
         break;
       }
       case "september:0": {
-        box(0, -103, 0, 340, 14, 190, C.wood);
+        for(const x of [-175,175])for(const z of [-75,75])box(x,-130,z,10,40,10,C.wood);
+        box(0, -103, 0, 390, 14, 190, C.wood);
         for (let j = 0; j < 5; j++) {
-          const x = -125 + j * 63;
-          segment([x, -94, 0], [x, -30 + (j % 2) * 25, 0], 2, C.gold);
+          const x=-152+j*76, R=18+j*4, lift=q(.05+j*.06,.45+j*.06), cy=(-96+R)*(1-lift)+(-8+(j%2)*25)*lift;
+          cylinder(x,-89,0,10,14,C.wood);
+          segment([x, -94, 0], [x,cy-R,0], 2, C.gold);
           sphere(
             x,
-            -8 + (j % 2) * 25,
+            cy,
             0,
             18 + j * 4,
             [C.gold, C.blue, C.rose, C.green, C.violet][j],
           );
-          if (j === 3) torus(x, 17, 0, 43, 3, C.ivory, 1, [0.25, 0, 0.2]);
+          if (j === 3) torus(x, cy, 0, 43, 3, C.ivory, 1, [0.25, 0, 0.2]);
         }
         box(0, -80, 70, 135, 14, 70, C.blue);
         break;
       }
       case "september:1": {
-        for (const x of [-160, 160]) box(x, -5, 0, 16, 240, 28, C.wood);
+        for (const x of [-160, 160]) box(x, -15, 0, 16, 270, 28, C.wood);
         for (let j = 0; j < 5; j++) {
           const y = -85 + j * 43;
           segment([-153, y, 0], [153, y, 0], 2, C.gold);
           for (let n = 0; n < 6; n++) {
-            const shift = Math.sin(clock * 0.5 + j) * 20 * a;
+            const shift = Math.sin(clock*.5+j)*6*a;
             torus(
-              -100 + n * 33 + shift,
+              -105 + n * 42 + shift,
               y,
               0,
               13,
@@ -1397,10 +1409,13 @@
             );
           }
         }
+        const row=Math.floor(clock*.5)%5,sy=-85+row*43;segment([-190,sy,-25],[-126+Math.sin(clock*.5+row)*6*a,sy,0],5,C.ivory);
         break;
       }
       case "september:2": {
+        groupOffset=[0,-11,0];
         cylinder(0, -115, 0, 100, 48, C.wood);
+        box(0,-98,0,44,25,44,C.dark);
         segment([0, -90, 0], [0, 45, 0], 5, C.gold);
         sphere(0, 45, 0, 38, C.gold);
         for (let j = 0; j < 4; j++) {
@@ -1446,7 +1461,7 @@
         break;
       }
       case "summer:1": {
-        groupRotation = [0, clock * 0.25, 0];
+        cylinder(0,-144,0,110,12,C.wood);segment([0,-138,20],[0,-58,20],6,C.gold);groupRotation=[0,clock*.25,0];
         for (let j = 0; j < 70; j++) {
           const u = j * 0.18,
             r = 7 + j * 0.9,
@@ -1471,6 +1486,7 @@
         break;
       }
       case "summer:2": {
+        groupOffset=[0,-6,0];
         cylinder(0, -137, 0, 185, 14, C.blue);
         torus(0, -128, 0, 188, 12, C.ivory);
         const y = -97 + Math.sin(clock * 0.8) * 3;
@@ -1502,31 +1518,27 @@
         cylinder(0, -88, 0, 67, 120, C.blue, 0.08);
         torus(0, -26, 0, 67, 2, C.ivory, 0.3);
         cylinder(0, -85, 0, 24, 112, C.ivory);
-        sphere(0, -15, 0, 8, C.gold, k, [0.4, 1.6, 0.4]);
+        sphere(0, -15, 0, 8,C.gold,.85+.15*Math.sin(clock*4), [0.4, 1.6, 0.4]);
         cylinder(0, -147, 0, 84, 5, C.wood);
         break;
       }
       case "memorial:1": {
-        for (let j = 0; j < 5; j++)
-          sphere(
-            j % 2 ? 5 : -5,
-            -125 + j * 27,
-            0,
-            55 - j * 7,
-            "#889a9e",
-            1,
-            [1, 0.28, 0.8],
-            [0, j * 0.3, 0],
-          );
-        for (let j = 0; j < 5; j++)
-          torus(0, -151, 0, 90 + j * 28, 1, C.blue, 0.13);
+        let base=-150;
+        for(let j=0;j<5;j++){
+          const r=55-j*7,ry=r*.28,y=base+ry,drop=0;
+          sphere(j%2?2:-2,y+drop,0,r,"#889a9e",1,[1,.28,.8],[0,j*.3,0]);
+          base=y+ry-.8;
+        }
+        const drop=(clock*.3)%1;if(drop<.75)sphere(105,140-380*drop,0,2,C.blue);
+        for(let j=0;j<5;j++)torus(0,-149,0,90+j*28+((clock*5)%28),1,C.blue,.13*(1-j/6));
         break;
       }
       case "memorial:2": {
         box(0, -67, 0, 230, 13, 67, C.wood);
+        for(const x of [-96,96])box(x,-24.5,35,7,85,7,C.wood);
         box(0, -12, 35, 230, 60, 9, C.wood);
         for (const x of [-85, 85])
-          for (const z of [-20, 25]) box(x, -109, z, 7, 85, 7, C.dark);
+          for (const z of [-20, 25]) box(x, -108.25, z, 7, 83.5, 7, C.dark);
         segment([150, -150, 65], [145, 115, 65], 8, C.wood);
         for (let j = 0; j < 9; j++) {
           const u = j * 2.4;
@@ -1540,6 +1552,7 @@
             [1, 0.4, 1],
           );
         }
+        const drift=q(.1,.9);sphere(150-130*drift+Math.sin(drift*Math.PI)*30,90-237*drift,65-80*drift,8,C.gold,1,[1,.13,.65],[0,clock*.3,.1*Math.sin(clock)]);
         break;
       }
       case "newborn:0": {
@@ -1554,6 +1567,7 @@
             return [Math.cos(u) * 105, -110 - Math.sin(u) * 30];
           }),
         );
+        groupOffset=[0,-150-Math.min(...rocker.map(v=>{const a=groupRotation[2];return v[0]*Math.sin(a)+(v[1]+120)*Math.cos(a)-120;})),0];
         for (const z of [-29, 29])
           plate(rocker, [0, 0, z], C.wood, 1, [0, 0, 0], 7);
         box(0, -53, 0, 120, 55, 45, C.wood);
@@ -1566,8 +1580,8 @@
       }
       case "newborn:1": {
         groupRotation = [0, 0, Math.sin(clock * 0.8) * 0.16];
-        const angle = 0;
-        segment([-62, -80, 0], [60, 90, 0], 12, C.wood);
+        const angle=0;segment([-160,-110,0],[-96,-95,0],13,C.ivory);
+        segment([-38.7, -47.5, 0], [60, 90, 0], 12, C.wood);
         torus(-62, -80, 0, 40, 8, C.gold, 1, [Math.PI / 2, 0, angle]);
         sphere(60, 90, 0, 45, C.blue);
         for (let j = 0; j < 8; j++) {
@@ -1585,25 +1599,20 @@
         break;
       }
       case "newborn:2": {
-        for (let j = 0; j < 5; j++) {
-          const row = j < 3 ? 0 : 1,
-            x = j < 3 ? -82 + j * 82 : -41 + (j - 3) * 82,
-            y = -110 + row * 82;
-          box(
-            x,
-            y + (1 - q(0.1 + j * 0.1, 0.4 + j * 0.1)) * 80,
-            0,
-            77,
-            77,
-            77,
-            [C.blue, C.rose, C.gold, C.green, C.violet][j],
-          );
-          star(x, y, -40, 17, C.ivory, q(0.1 + j * 0.1, 0.4 + j * 0.1));
+        for(let j=0;j<5;j++){
+          const row=j<3?0:1,tx=j<3?-82+j*82:-41+(j-3)*82,ty=-111.5+row*77,u=q(.02+j*.185,.18+j*.185),sx=-180+j*90;
+          const lift=clamp(u/.25),carry=clamp((u-.25)/.5),lower=clamp((u-.75)/.25),x=sx+(tx-sx)*carry,z=160*(1-carry),y=-111.5+211.5*lift-(100-ty)*lower;
+          box(x,y,z,77,77,77,[C.blue,C.rose,C.gold,C.green,C.violet][j]);star(x,y,z-40,17,C.ivory);
+          if(u>0&&u<1){segment([230,230,0],[x,230,z],4,C.gold);segment([x,230,z],[x,y+42,z],2,C.ivory);box(x,y+43,z,45,8,20,C.gold);}
         }
+        segment([230,-150,0],[230,230,0],6,C.wood);
         break;
       }
       case "nauryz:0": {
-        cylinder(0, -74, 0, 145, 148, C.ivory);
+        cylinder(0,-146,0,145,8,C.ivory);
+        for(let j=0;j<48;j++){const u=(j+.5)*TAU/48,door=Math.sin(u)<-.97;
+          box(Math.cos(u)*143,-(door?18:74),Math.sin(u)*143,19,door?36:148,4,C.ivory,1,[0,Math.PI/2-u,0]);
+        }
         cylinder(0, 30, 0, 149, 58, C.wood, 1, 40);
         torus(0, 65, 0, 40, 6, C.gold);
         for (let j = 0; j < 24; j++) {
@@ -1621,18 +1630,19 @@
             C.gold,
           );
         }
-        box(0, -91, -147, 49, 109, 5, C.wood);
-        star(0, -78, -151, 16, C.gold);
+        groupOrigin=[-24.5,-91,-150];groupRotation=[0,a*1.15,0];
+        box(0,-91,-150,49,109,5,C.wood);sphere(17,-91,-159,4,C.gold);segment([17,-91,-164],[65,-120,-190],7,C.ivory);star(0,-78,-157,16,C.gold);
         break;
       }
       case "nauryz:1": {
-        groupRotation = [0, 0, Math.sin(clock * 0.6) * 0.04];
+        groupRotation=[0,0,0];
         sphere(0, -70, 0, 69, C.wood, 1, [0.6, 1.1, 0.25]);
         box(0, 42, 0, 17, 170, 14, C.wood);
         box(0, 136, 0, 30, 23, 15, C.gold);
         for (const x of [-3, 3])
           segment([x, -114, -18], [x, 137, -10], 0.9, C.ivory);
         for (let j = 0; j < 6; j++) box(0, 20 + j * 16, -9, 17, 2, 3, C.gold);
+        sphere(10+Math.sin(clock*4)*9,-70,-24,9,C.ivory);segment([15,-70,-24],[120,-100,-24],8,C.ivory);
         for (let j = 0; j < 10; j++)
           sphere(
             35 + j * 9,
@@ -1645,6 +1655,7 @@
         break;
       }
       case "nauryz:2": {
+        segment([0,20,25],[0,175,25],2,C.ivory);
         sphere(0, 20, 0, 35, C.wood, 1, [0.55, 1.1, 0.6]);
         sphere(0, 61, 0, 17, C.gold);
         plate(
@@ -1693,17 +1704,20 @@
           }
         }
         for (let j = 0; j < 13; j++)
-          sphere(-80 + j * 13, -126, -60, 5, C.gold, b);
+          sphere(-80+j*13,-145,-60,5,C.gold,1);
+        sphere(-125+250*a,-144,-90,5,C.rose);
         break;
       }
       case "anniversary:1": {
+        groupOffset=[0,-7,0];
         box(0, -98, 0, 310, 90, 225, C.wood);
-        cylinder(-30, -49, 0, 100, 5, C.dark);
+        cylinder(-30,-49, 0, 100, 5, C.dark);
         torus(-30, -45, 0, 79, 1, C.ivory, 0.25);
         torus(-30, -45, 0, 64, 1, C.ivory, 0.25);
         cylinder(-30, -44, 0, 30, 3, C.rose);
         segment([125, -41, 70], [75, -25, 0], 3, C.gold);
-        segment([75, -25, 0], [37, -25, -30], 3, C.ivory);
+        segment([75,-25,0],[37,-36,-30],3,C.ivory);
+        segment([37,-36,-30],[37,-45,-30],1.5,C.gold);
         star(-30 + Math.cos(rot) * 15, -40, Math.sin(rot) * 15, 5, C.gold, 1, [
           Math.PI / 2,
           0,
@@ -1713,14 +1727,17 @@
       }
       case "anniversary:2": {
         segment([0, -150, 45], [0, 155, 45], 5, C.gold);
+        segment([0,132,45],[0,132,0],3,C.gold);
+        for(let j=0;j<4;j++){const u=j*TAU/4;segment([0,132,0],[Math.cos(u)*140,132,Math.sin(u)*140],2,C.gold);}
         torus(0, 132, 0, 140, 3, C.gold);
         for (let j = 0; j < 5; j++) {
           const u = (j * TAU) / 5 + rot * 0.3,
             x = Math.cos(u) * 140,
             z = Math.sin(u) * 140;
           segment([x, 130, z], [x, 45, z], 1, C.ivory);
-          box(x, 7, z, 65, 78, 5, C.wood, 1, [0, -u, 0]);
-          star(x, 7, z - 4, 13, C.rose, 1, [0, -u, 0]);
+          groupOrigin=[x,7,z];groupRotation=[0,-u,0];
+          box(x,7,z,65,78,5,C.wood);star(x,7,z-6.5,13,C.rose);
+          groupOrigin=[0,0,0];groupRotation=[0,0,0];
         }
         break;
       }
@@ -1730,12 +1747,13 @@
         cylinder(-63, 104, 0, 39, 40, C.dark, 1, 0);
         for (let j = 0; j < 4; j++) {
           const x = -110 + j * 72;
-          box(x, -130, -100, 28, 50, 9, C.dark);
+          box(x, -125, -100, 28, 50, 9, C.dark);
           star(x, -112, -107, 5, C.gold, b);
         }
         break;
       }
       case "halloween:1": {
+        groupOffset=[0,-65,0];
         for (let j = 0; j < 10; j++) {
           const u = (j * TAU) / 10;
           sphere(
@@ -1757,7 +1775,7 @@
           ],
           [0, 0, -74],
           C.gold,
-          a,
+          .8+.2*Math.sin(clock*3),
         );
         plate(
           [
@@ -1767,7 +1785,7 @@
           ],
           [0, 0, -74],
           C.gold,
-          a,
+          .8+.2*Math.sin(clock*3),
         );
         plate(
           [
@@ -1779,50 +1797,55 @@
           ],
           [0, 0, -73],
           C.gold,
-          a,
+          .8+.2*Math.sin(clock*3),
         );
         break;
       }
       case "halloween:2": {
+        groupOffset=[0,-50,0];
         cylinder(0, -95, 0, 145, 10, C.violet);
-        cylinder(0, 8, 0, 96, 196, C.violet, 1, 0, [0, 0, -0.15]);
+        cylinder(0, 8, 0, 96, 196, C.violet, 1, 0, [0, 0, 0]);
         torus(0, -60, 0, 80, 5, C.orange);
+        torus(0,30,0,170,2,C.wood,.7);for(const x of [-160,160])segment([x,-95,0],[x,30,0],2,C.wood);
         for (let j = 0; j < 9; j++) {
           const u = rot * 2 + (j * TAU) / 9;
+          segment([Math.cos(u)*170,30,Math.sin(u)*110],[Math.cos(u)*170,10+Math.sin(u)*50,Math.sin(u)*110],1,C.ivory);
           star(
             Math.cos(u) * 170,
             10 + Math.sin(u) * 50,
             Math.sin(u) * 110,
             9,
             C.gold,
-            a,
+            1,
             [0, -u, 0],
           );
         }
         break;
       }
       case "wedding:0": {
-        torus(-65 + 40 * a, 10, 0, 90, 11, C.gold, 1, [
+        torus(-65 + 40 * a, 10, -32, 90, 11, C.gold, 1, [
           Math.PI / 2,
-          rot * 0.35,
+          0,
           0.2,
         ]);
-        torus(65 - 40 * a, 10, 20, 90, 11, C.ivory, 1, [
+        torus(65 - 40 * a, 10, 32, 90, 11, C.ivory, 1, [
           Math.PI / 2,
-          -rot * 0.3,
+          0,
           -0.2,
         ]);
+        for(const dir of [-1,1]){const xx=dir*(65-40*a);segment([xx,-150,dir*32],[xx,-90,dir*32],5,C.wood);box(xx,-145,dir*32,75,10,40,C.wood);}
         for (let j = 0; j < 10; j++)
-          sphere(Math.cos(j) * 170, -140, Math.sin(j) * 70, 4, C.rose, b);
+          sphere(Math.cos(j) * 170, -140, Math.sin(j) * 70, 4,C.rose,1);
         break;
       }
       case "wedding:1": {
         cylinder(0, -122, 0, 115, 55, C.wood);
         cylinder(0, -91, 0, 111, 6, C.gold);
+        box(0,-126,0,42,20,42,C.dark);
         groupRotation = [0, clock * 0.25, 0];
         for (const x of [-33, 33]) {
-          cylinder(x, -20, 0, 17, 122, x < 0 ? C.blue : C.ivory, 1, 8);
-          sphere(x, 54, 0, 13, C.ivory);
+          cylinder(x, -26.5, 0, 17, 122, x < 0 ? C.blue : C.ivory, 1, 8);
+          sphere(x, 47.5, 0, 13, C.ivory);
           segment([x, 9, 0], [-x, 9, -17], 3, C.gold);
         }
         torus(0, -86, 0, 95, 2, C.rose);
@@ -1830,15 +1853,15 @@
       }
       case "wedding:2": {
         for (const x of [-76, 76]) {
-          cylinder(x, -145, 0, 50, 5, C.gold);
-          segment([x, -140, 0], [x, -52, 0], 3, C.ivory);
+          cylinder(x, -147.5, 0, 50, 5, C.gold);
+          segment([x, -145, 0], [x, -46.5, 0], 3, C.ivory);
           cylinder(x, 6, 0, 13, 105, C.blue, 0.16, 43);
-          cylinder(x, -4, 0, 22, 60, C.gold, 0.8, 36);
+          cylinder(x,-12,0,12.3,61,C.gold,.65,29.7);
           torus(x, 60, 0, 43, 2, C.ivory, 0.6);
           for (let j = 0; j < 9; j++)
             sphere(
               x + Math.sin(j) * 12,
-              -26 + ((clock * 15 + j * 13) % 65),
+              -36 + ((clock * 15 + j * 13) % 51),
               0,
               1.8,
               C.ivory,
@@ -1848,11 +1871,7 @@
         break;
       }
       case "graduation:0": {
-        groupRotation = [
-          0,
-          Math.sin(clock * 0.3) * 0.4,
-          Math.sin(clock * 0.2) * 0.08,
-        ];
+        const offset=-100+200*a;segment([-240,-85,0],[offset-80-120*q(.7,1),-58,0],12,C.ivory);segment([240,-85,0],[offset+80+120*(1-q(0,.3)),-58,0],12,C.ivory);groupOffset=[offset,0,0];groupRotation=[0,0,0];
         cylinder(0, -22, 0, 37, 245, C.ivory, 1, 37, [0, 0, Math.PI / 2]);
         torus(0, -22, 0, 39, 9, C.rose, 1, [0, 0, Math.PI / 2]);
         plate(
@@ -1881,88 +1900,92 @@
       case "graduation:1": {
         cylinder(0, -137, 0, 80, 15, C.wood);
         segment([0, -125, 0], [0, -15, 0], 6, C.gold);
+        groupOrigin=[0,29,0];groupRotation=[0,clock*.2,0];
         sphere(0, 29, 0, 91, C.blue);
         for (let j = 0; j < 6; j++) {
           const u = j;
-          plate(
-            [
-              [-15, 0],
-              [10, 24],
-              [30, 3],
-              [18, -30],
-              [-8, -16],
-            ],
-            [Math.cos(u) * 80, 30, Math.sin(u) * 80],
-            C.green,
-            1,
-            [0, -u, 0],
-            2,
-          );
+          const boundary=[[-15,0],[10,24],[30,3],[18,-30],[-8,-16]];
+          const map=(x,y)=>{
+            const vec=[Math.cos(u)*91-Math.sin(u)*x,y,Math.sin(u)*91+Math.cos(u)*x];
+            const length=Math.hypot(...vec);return vec.map((z,i)=>z/length*92.4+(i===1?29:0));
+          };
+          for(let edge=0;edge<boundary.length;edge++){
+            const B=boundary[edge],D=boundary[(edge+1)%boundary.length],verts=[],ids=[];
+            for(let row=0;row<=5;row++)for(let col=0;col<=5-row;col++)verts.push(map((B[0]*row+D[0]*col)/5,(B[1]*row+D[1]*col)/5));
+            const at=(r,c)=>r*6-r*(r-1)/2+c;
+            for(let row=0;row<5;row++)for(let col=0;col<5-row;col++){
+              ids.push([at(row,col),at(row+1,col),at(row,col+1)]);
+              if(col<4-row)ids.push([at(row+1,col),at(row+1,col+1),at(row,col+1)]);
+            }
+            mesh(verts,ids,[0,29,0],C.green,1,[0,0,0],false);
+          }
         }
-        box(0, 136 + 35 * a, 0, 160, 9, 160, C.dark, 1, [0, rot * 0.3, 0]);
-        cylinder(0, 118 + 35 * a, 0, 50, 28, C.dark);
-        segment([70, 135 + 35 * a, -60], [82, 93 + 35 * a, -65], 2, C.gold);
+        box(0, 152, 0, 160, 9, 160, C.dark, 1, [0,0,0]);
+        cylinder(0, 134, 0, 50, 28, C.dark);
+        segment([70, 151, -60], [82, 109, -65], 2, C.gold);
         break;
       }
       case "graduation:2": {
         for (const x of [-105, 105])
-          segment([0, -70, 0], [x, -150, 50], 5, C.gold);
-        segment([0, -70, 0], [0, -150, -80], 5, C.gold);
+          segment([0, -70, 0], [x, -145, 50], 5, C.gold);
+        segment([0, -70, 0], [0, -145, -80], 5, C.gold);
         segment([0, -70, 0], [0, 25, 0], 5, C.gold);
         const r = [0.9 - a * 0.15, 0, -0.55 + a * 0.25],
           end = rotate([0, 115, 0], r);
         cylinder(0, 25, 0, 34, 230, C.blue, 1, 27, r);
         cylinder(end[0], 25 + end[1], end[2], 32, 12, C.gold, 1, 32, r);
-        star(170, 137, -50, 14, C.gold, b);
+        star(170, 137, -50, 14, C.gold,1);
         break;
       }
       case "housewarming:0": {
-        box(0, -150, 0, 290, 9, 230, C.wood);
-        box(-145, -45, 0, 9, 210, 230, C.ivory);
-        box(0, -45, 115, 290, 210, 9, C.ivory);
+        box(0, -145.5, 0, 290, 9, 230, C.wood);
+        box(-145, -36, 0, 9, 210, 230, C.ivory);
+        box(0, -36, 115, 290, 210, 9, C.ivory);
         box(45, -85, 40, 130, 75, 60, C.violet);
-        box(45, -58, 75, 130, 27, 12, C.rose);
+        box(45, -58, 64, 130, 27, 12, C.rose);
+        for(const x of [-5,95])for(const z of [19,60])box(x,-131.75,z,9,18.5,9,C.wood);
+        for(const x of [-74,-16])for(const z of [-65,-25])box(x,-134.5,z,6,13,6,C.wood);
         box(-45, -122, -45, 75, 12, 55, C.wood);
-        cylinder(-85, -98, 65, 25, 80, C.ivory);
-        flowers(-85, -56, 65, 5);
+        cylinder(-85, -101, 65, 25, 80, C.ivory);
+        flowers(-85, -63, 65, 5);
+        box(0,5,109,108,80,2,C.blue);
+        for(const dir of [-1,1])box(dir*(54-26*(1-a)),5,106,52*(1-a)+1,82,3,C.gold);
+        box(0,5,105,3,80,3,C.ivory);box(0,5,105,108,3,3,C.ivory);
         break;
       }
       case "housewarming:1": {
         for (let j = 0; j < 6; j++) {
           box(-140 + j * 52, -134 + j * 34, 0, 54, 13, 95, C.wood);
-          box(-140 + j * 52, -149 + j * 17, 25, 7, 34 + j * 34, 7, C.gold);
+          const top=-140.5+j*34;
+          for(const z of [-32,32])box(-140+j*52,(-150+top)/2,z,7,top+150,7,C.gold);
         }
-        cylinder(135, 45, 0, 32, 55, C.rose);
-        flowers(135, 72, 0, 7);
+        cylinder(120, 70, 0, 32, 55, C.rose);
+        flowers(120, 98, 0, 7);
         break;
       }
       case "housewarming:2": {
-        torus(-85, 5, 0, 65, 12, C.gold, 1, [Math.PI / 2, a * 0.4, 0]);
-        box(35, 5, 0, 155, 15, 15, C.gold, 1, [0, a * 0.4, 0]);
+        groupOrigin=[120,5,0];groupRotation=[a*Math.PI/2,0,0];
+        torus(-85, 5, 0, 65, 12, C.gold, 1, [Math.PI / 2, 0, 0]);
+        box(35, 5, 0, 155, 15, 15, C.gold, 1, [0, 0, 0]);
         box(85, -13, 0, 13, 38, 15, C.gold);
         box(115, -13, 0, 13, 38, 15, C.gold);
+        segment([-220,5,0],[-142,5,0],12,C.ivory);
         cylinder(-85, 5, 0, 42, 4, C.dark, 1, 42, [Math.PI / 2, 0, 0]);
         break;
       }
       case "success:0": {
-        groupRotation = [0, clock * 0.23, 0];
+        cylinder(0,-147,0,110,6,C.dark);groupRotation=[0,clock*.23,0];groupOffset=[0,-5,0];
         cylinder(0, -133, 0, 87, 24, C.wood);
         cylinder(0, -112, 0, 55, 17, C.gold);
-        segment([0, -103, 0], [0, -27, 0], 12, C.gold);
+        segment([0, -103, 0], [0, -23.5, 0], 12, C.gold);
         cylinder(0, 29, 0, 38, 105, C.gold, 1, 92);
         for (const x of [-90, 90])
           torus(x, 46, 0, 45, 7, C.gold, 1, [Math.PI / 2, 0, 0]);
-        star(0, 30, -62, 28, C.ivory);
+        star(0,30,-68,22,C.ivory);
         break;
       }
       case "success:1": {
-        box(0, -140, 0, 170, 15, 120, C.wood);
-        box(0, -86, 0, 12, 102, 25, C.gold);
-        box(0, -34, 0, 170, 9, 27, C.wood, 1, [0, 0, -a * 0.7]);
-        const u = clamp((t - 1.6) / 5.5),
-          x = -105 + 310 * u,
-          y = -15 + 420 * u - 540 * u * u;
-        star(x, y, 0, 24, C.gold, 1, [0, rot * 2, 0]);
+        box(0,-141,0,170,18,120,C.wood);box(0,-91,0,12,82,25,C.gold);const release=q(.2,.28),angle=-.4+release*.75;box(0,-45,0,170,9,27,C.wood,1,[0,0,angle]);const tip=[-75*Math.cos(angle),-45-75*Math.sin(angle),0];const u=clamp((p-.28)/.65),x=u?tip[0]+300*u:tip[0],y=tip[1]+23+380*u-470*u*u;star(x,Math.max(-126,y),0,22,C.gold,1,[0,clock*.8*u,0]);segment([65,-135,0],[55,-45+55*Math.sin(angle),0],3,C.rose);
         break;
       }
       case "success:2": {
@@ -1984,13 +2007,13 @@
           );
         }
         box(110, -103, 0, 70, 95, 70, C.dark);
-        star(110, -25, 0, 35, C.gold, a);
+        star(110,-25,0,35,C.gold,1);
         segment([-70, -135, 0], [110, -135, 0], 2, C.gold);
         break;
       }
       case "recovery:0": {
-        cup(0, -90, 0, 55, C.green);
-        steam(0, -45, 0, a);
+        cup(0, -111, 0, 55, C.green);
+        steam(0,-73,0,1);
         for (let j = 0; j < 3; j++)
           sphere(
             -115 + j * 22,
@@ -2002,20 +2025,21 @@
             [1, 0.2, 0.5],
             [0, j * 0.4, 0],
           );
-        torus(0, -125, 0, 86, 4, C.ivory);
+        torus(0, -146, 0, 88, 3, C.ivory);
         break;
       }
       case "recovery:1": {
         for (let j = 0; j < 3; j++)
           sphere(
             -95 + j * 90,
-            -115,
+            -133.2,
             30 - j * 25,
             48,
             C.ivory,
             1,
             [1, 0.35, 0.7],
           );
+        const drop=(clock*.3)%1;if(drop<.75)sphere(0,140-380*drop,-60,2,C.blue);
         for (let j = 0; j < 6; j++)
           torus(
             0,
@@ -2029,9 +2053,10 @@
         break;
       }
       case "recovery:2": {
+        sphere(128,95,20,42,C.gold,1);
         for (let j = 0; j < 7; j++)
           sphere(
-            -110 + j * 37,
+            -110+j*37+360*b,
             55 + Math.sin(j) * 12,
             0,
             48,
@@ -2050,32 +2075,76 @@
             (1 - b) * 0.6,
           );
         }
-        sphere(128, 95, 20, 42, C.gold, b);
+
         break;
       }
     }
-    faces.sort((a, b) => b.z - a.z);
-    for (const f of faces) {
-      g.save();
-      g.globalAlpha = f.alpha;
-      g.fillStyle = f.c;
-      g.beginPath();
-      f.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
-      g.closePath();
-      g.fill();
-      if (f.alpha > 0.5) {
-        g.strokeStyle = shade(f.c, 0.8);
-        g.lineWidth = 0.4;
-        g.stroke();
-      }
-      g.restore();
+    // Real per-pixel depth: sorting whole faces by their average depth hid parts
+    // of records, tables and globes even when those parts did not intersect.
+    const rw = Math.max(240, Math.min(900, g.canvas.width || 800)), rh = Math.round(rw*.6);
+    let buffer=s.depthBuffer;
+    if(!buffer || buffer.w!==rw){
+      const canvas=document.createElement('canvas');canvas.width=rw;canvas.height=rh;
+      const context=canvas.getContext('2d');
+      buffer=s.depthBuffer={w:rw,h:rh,canvas,context,pixels:context.createImageData(rw,rh),depth:new Float32Array(rw*rh)};
     }
+    const data=buffer.pixels.data, depths=buffer.depth;
+    data.fill(0);depths.fill(0);
+    const scale=rw/1000;
+    function triangle(A,B,D,color,alpha,opaque){
+      const ax=A[0]*scale,ay=A[1]*scale,bx=B[0]*scale,by=B[1]*scale,cx=D[0]*scale,cy=D[1]*scale;
+      const determinant=(by-cy)*(ax-cx)+(cx-bx)*(ay-cy);
+      if(Math.abs(determinant)<1e-7)return;
+      const inv=1/determinant,xx0=Math.max(0,Math.floor(Math.min(ax,bx,cx))),xx1=Math.min(rw-1,Math.ceil(Math.max(ax,bx,cx)));
+      const yy0=Math.max(0,Math.floor(Math.min(ay,by,cy))),yy1=Math.min(rh-1,Math.ceil(Math.max(ay,by,cy)));
+      const da=(by-cy)*inv,db=(cy-ay)*inv,ia=1/(1000+A[2]),ib=1/(1000+B[2]),ic=1/(1000+D[2]);
+      for(let y=yy0;y<=yy1;y++){
+        let a=((by-cy)*(xx0+.5-cx)+(cx-bx)*(y+.5-cy))*inv;
+        let b=((cy-ay)*(xx0+.5-cx)+(ax-cx)*(y+.5-cy))*inv;
+        for(let x=xx0;x<=xx1;x++,a+=da,b+=db){
+          if(a<0||b<0||a+b>1)continue;
+          const z=a*ia+b*ib+(1-a-b)*ic,idx=y*rw+x;
+          if(z<depths[idx]-1e-9)continue;
+          const off=idx*4;
+          if(opaque){depths[idx]=z;data[off]=color[0];data[off+1]=color[1];data[off+2]=color[2];data[off+3]=255;}
+          else{
+            const prev=data[off+3]/255,out=alpha+prev*(1-alpha);
+            if(out>0)for(let n=0;n<3;n++)data[off+n]=(color[n]*alpha+data[off+n]*prev*(1-alpha))/out;
+            data[off+3]=out*255;
+          }
+        }
+      }
+    }
+    function triangulate(pts){
+      if(pts.length===3)return [[0,1,2]];
+      let area=0;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];area+=a[0]*b[1]-b[0]*a[1];}
+      const direction=area>=0?1:-1, cross=(a,b,c)=>(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]);
+      // Convex caps and quads take the cheap fan path.
+      if(pts.every((p,i)=>cross(pts[(i+pts.length-1)%pts.length],p,pts[(i+1)%pts.length])*direction>=-1e-7))
+        return Array.from({length:pts.length-2},(_,i)=>[0,i+1,i+2]);
+      const ids=pts.map((_,i)=>i),out=[];let guard=pts.length*pts.length;
+      while(ids.length>3&&guard-->0){let found=false;
+        for(let j=0;j<ids.length;j++){
+          const a=ids[(j+ids.length-1)%ids.length],b=ids[j],c=ids[(j+1)%ids.length];
+          if(cross(pts[a],pts[b],pts[c])*direction<=1e-7)continue;
+          if(ids.some(k=>k!==a&&k!==b&&k!==c&&cross(pts[a],pts[b],pts[k])*direction>=0&&cross(pts[b],pts[c],pts[k])*direction>=0&&cross(pts[c],pts[a],pts[k])*direction>=0))continue;
+          out.push([a,b,c]);ids.splice(j,1);found=true;break;
+        }
+        if(!found)break;
+      }
+      if(ids.length===3)out.push([...ids]);return out;
+    }
+    // Transparent faces remain back-to-front, but cannot paint through an opaque object.
+    faces.sort((a,b)=>(a.alpha<.999)-(b.alpha<.999)||b.z-a.z);
+    for(const f of faces){const color=rgb(f.c);for(const ids of triangulate(f.pts))triangle(...ids.map(i=>f.pts[i]),color,f.alpha,f.alpha>=.999);}
+    buffer.context.putImageData(buffer.pixels,0,0);
+    g.drawImage(buffer.canvas,0,0,1000,600);
     s.artStats = { style: "volume", faces: faces.length };
   }
   let paperGrain = null;
   function paper(s, t, topic, index) {
     const g = s.ctx,
-      p = ease(t / (topic === "memorial" ? 11 : 8)),
+      p = clamp(t / (topic === "memorial" ? 11 : 8)),
       q = (a, b) => ease((p - a) / (b - a)),
       clock = t,
       k = q(0, 0.4),
@@ -2108,10 +2177,18 @@
     g.save();
     g.shadowBlur = 0;
     g.fillStyle = g.createPattern(paperGrain, "repeat");
-    g.fillRect(0, 0, 1000, 600);
+    if(!s.workshopLive)g.fillRect(0, 0, 1000, 600);
     g.lineJoin = "round";
     g.lineCap = "round";
+    let captureGroup = null, captureSerial = 0;
+    function capture(kind, data) {
+      if (!s.capturePaper) return false;
+      const m=g.getTransform(), point=([x,y])=>[m.a*x+m.c*y+m.e,m.b*x+m.d*y+m.f];
+      s.capturePaper({kind,...data,points:data.points?.map(point),at:data.at?point(data.at):null,group:captureGroup??++captureSerial});
+      return true;
+    }
     function cut(pts, c, alpha = 1, depth = 1) {
+      if(alpha>0 && capture('cut',{points:pts,c,alpha,depth}))return;
       if (alpha <= 0) return;
       g.save();
       g.globalAlpha = alpha;
@@ -2157,6 +2234,7 @@
       g.restore();
     }
     function line(x, y, xx, yy, c = ink, width = 1, alpha = 1) {
+      if(capture('line',{points:[[x,y],[xx,yy]],c,width,alpha}))return;
       g.save();
       g.globalAlpha = alpha;
       g.strokeStyle = c;
@@ -2203,7 +2281,7 @@
         2,
       );
     }
-    function heart(x, y, r, c, alpha = 1) {
+    function raw_heart(x, y, r, c, alpha = 1) {
       const pts = Array.from({ length: 70 }, (_, j) => {
         const u = (j * TAU) / 70;
         return [
@@ -2221,6 +2299,7 @@
       line(x, y - r * 0.4, x, y + r * 0.85, shade(c, 0.8), 0.7, alpha * 0.7);
     }
     function text(str, x, y, size = 20, c = ink, alpha = 1) {
+      if(s.capturePaper)return;
       g.save();
       g.globalAlpha = alpha;
       g.fillStyle = c;
@@ -2229,7 +2308,7 @@
       g.fillText(str, x, y, 770);
       g.restore();
     }
-    function crane(x, y, r, c, fold = 1) {
+    function raw_crane(x, y, r, c, fold = 1) {
       cut(
         [
           [x - r, y],
@@ -2257,7 +2336,7 @@
       );
       line(x - r * 0.6, y, x + r * 0.24, y, shade(c, 0.75), 0.7);
     }
-    function flower(x, y, r, c, open = 1) {
+    function raw_flower(x, y, r, c, open = 1) {
       line(x, y + 10, x, y + 60, palette.green, 2);
       for (let j = 0; j < 7; j++) {
         const u = (j * TAU) / 7;
@@ -2284,7 +2363,7 @@
       }
       disk(x, y, r * 0.17, palette.yellow);
     }
-    function fan(x, y, r, c, unfold = 1) {
+    function raw_fan(x, y, r, c, unfold = 1) {
       for (let j = 0; j < 14; j++) {
         const u = -Math.PI / 2 + (j - 6.5) * 0.16 * unfold;
         cut(
@@ -2306,7 +2385,7 @@
       }
       disk(x, y, 7, palette.yellow);
     }
-    function house(x, y, w, c, open = 1) {
+    function raw_house(x, y, w, c, open = 1) {
       rect(x - w / 2, y, w, 100 * open, c);
       cut(
         [
@@ -2326,7 +2405,7 @@
           palette.yellow,
         );
     }
-    function hills() {
+    function raw_hills() {
       for (let j = 0; j < 4; j++) {
         const y = 365 + j * 35;
         cut(
@@ -2347,7 +2426,7 @@
         );
       }
     }
-    function leaf(x, y, r, rot, c = palette.green) {
+    function raw_leaf(x, y, r, rot, c = palette.green) {
       const pts = [];
       for (let j = 0; j < 30; j++) {
         const u = (j * TAU) / 30,
@@ -2368,14 +2447,14 @@
         0.7,
       );
     }
-    function rosette(x, y, r, c) {
+    function raw_rosette(x, y, r, c) {
       for (let j = 0; j < 24; j++) {
-        const u = (j * TAU) / 24;
+        const u = (j * TAU) / 24, unfold=q(.02+j*.015,.3+j*.015);
         cut(
           [
             [x, y],
-            [x + Math.cos(u) * r, y + Math.sin(u) * r],
-            [x + Math.cos(u + 0.13) * r, y + Math.sin(u + 0.13) * r],
+            [x + Math.cos(u) * r*unfold, y + Math.sin(u) * r*unfold],
+            [x + Math.cos(u + 0.13) * r*unfold, y + Math.sin(u + 0.13) * r*unfold],
           ],
           j % 2 ? c : shade(c, 1.15),
           1,
@@ -2385,6 +2464,14 @@
       disk(x, y, r * 0.65, palette.white);
       star(x, y, r * 0.36, palette.yellow);
     }
+    function heart(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_heart(...args);captureGroup=old; }
+    function crane(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_crane(...args);captureGroup=old; }
+    function flower(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_flower(...args);captureGroup=old; }
+    function fan(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_fan(...args);captureGroup=old; }
+    function house(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_house(...args);captureGroup=old; }
+    function hills(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_hills(...args);captureGroup=old; }
+    function leaf(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_leaf(...args);captureGroup=old; }
+    function rosette(...args) { const old=captureGroup;captureGroup=old??++captureSerial;raw_rosette(...args);captureGroup=old; }
     switch (topic + ":" + index) {
       case "just:0": {
         line(120, 395, 870, 395, palette.brown, 2);
@@ -2412,21 +2499,21 @@
           y = 330;
         fan(x, y, 145, palette.red, 0.2 + 0.8 * a);
         line(x, y, x, y + 113, palette.brown, 4);
-        for (let j = 0; j < 10; j++) {
+        for (let j = 0; j < 10; j++) { captureGroup=++captureSerial;
           const xx = 240 + j * 55,
             yy = 440 - (j % 3) * 15;
           flower(xx, yy, 12, palette.yellow, b);
-        }
+        captureGroup=null; }
         break;
       }
       case "just:2": {
         rect(190, 130, 620, 345, palette.white);
         line(500, 135, 500, 471, palette.brown, 1, 0.4);
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 7; j++) { captureGroup=++captureSerial;
           const x = 290 + j * 66,
             y = 350 - (j % 3) * 35;
           flower(x, y, 20, palette.red, a);
-        }
+        captureGroup=null; }
         text("Для тебя", 500, 440, 22, ink, b);
         break;
       }
@@ -2461,7 +2548,7 @@
       }
       case "friendship:1": {
         line(170, 160, 830, 160, palette.brown, 1.5);
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 7; j++) { captureGroup=++captureSerial;
           const x = 230 + j * 90,
             y = 210 + Math.sin(clock * 0.5 + j) * 4;
           line(x, 160, x, y, palette.brown, 1);
@@ -2486,30 +2573,31 @@
               0.5,
             );
           rect(x - 18, y + 71, 36, 6, palette.yellow);
-        }
+        captureGroup=null; }
         break;
       }
       case "friendship:2": {
-        for (let j = 0; j < 14; j++) {
-          const x = 225 + j * (18 + 12 * a),
+        const width=18+12*a+4*Math.sin(clock*1.6)*a;
+        for (let j = 0; j < 14; j++) { captureGroup=++captureSerial;
+          const x = 225 + j * (width),
             y = 240;
           cut(
             [
               [x, y + (j % 2) * 10],
-              [x + 30, y + ((j + 1) % 2) * 10],
-              [x + 30, y + 140 + ((j + 1) % 2) * 10],
+              [x + width, y + ((j + 1) % 2) * 10],
+              [x + width, y + 140 + ((j + 1) % 2) * 10],
               [x, y + 140 + (j % 2) * 10],
             ],
             j % 2 ? palette.red : palette.blue,
           );
-        }
+        captureGroup=null; }
         rect(205, 240, 25, 140, palette.brown);
-        rect(225 + 14 * (18 + 12 * a), 240, 25, 140, palette.brown);
+        rect(225 + 14 * (width), 240, 25, 140, palette.brown);
         for (let j = 0; j < 8; j++) disk(218, 262 + j * 14, 3, palette.white);
         break;
       }
       case "custom:0": {
-        for (let j = 0; j < 35; j++) {
+        for (let j = 0; j < 35; j++) { captureGroup=++captureSerial;
           const d = s.dots[j],
             u = j * 2.4,
             x = 500 + Math.cos(u) * (30 + 150 * d.r) * a,
@@ -2523,12 +2611,13 @@
             ],
             [palette.red, palette.blue, palette.yellow, palette.green][j % 4],
           );
-        }
+        captureGroup=null; }
         star(500, 285, 35, palette.white, b);
         break;
       }
       case "custom:1": {
-        const open = 0.25 + 0.75 * a;
+        const open=.25+.75*a;
+        g.save();g.translate(500,285);g.rotate((1-a)*-.25);g.scale(.2+.8*a,.6+.4*a);g.translate(-500,-285);
         cut(
           [
             [370, 358],
@@ -2569,13 +2658,14 @@
         );
         line(440, 228, 440 - 90 * open, 180, palette.brown);
         line(560, 228, 560 + 90 * open, 180, palette.brown);
+        g.restore();
         break;
       }
       case "custom:2": {
         const x = 500,
           y = 270;
         line(x, y, x, 465, palette.brown, 4);
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 4; j++) { captureGroup=++captureSerial;
           const u = (j * Math.PI) / 2 + clock * 0.35 * a;
           const pts = [
             [0, 0],
@@ -2590,13 +2680,13 @@
             pts,
             [palette.red, palette.blue, palette.green, palette.yellow][j],
           );
-        }
+        captureGroup=null; }
         disk(x, y, 10, palette.white);
         break;
       }
       case "birthday:0": {
         line(150, 452, 850, 452, palette.brown, 1.5);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const h = 70 + (j % 3) * 27;
           house(
             230 + j * 135,
@@ -2613,7 +2703,7 @@
               palette.yellow,
               b,
             );
-        }
+        captureGroup=null; }
         break;
       }
       case "birthday:1": {
@@ -2640,7 +2730,7 @@
         break;
       }
       case "birthday:2": {
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 7; j++) { captureGroup=++captureSerial;
           const x = 290 + j * 70,
             y = 365 - 170 * a + Math.sin(clock * 0.6 + j) * 9;
           disk(x, y, 28, j % 2 ? palette.red : palette.blue);
@@ -2654,12 +2744,12 @@
           );
           line(x, y + 35, 500 + (x - 500) * 0.4, 462, palette.brown, 0.8);
           line(x - 15, y - 15, x - 10, y - 22, palette.white, 2, 0.6);
-        }
+        captureGroup=null; }
         heart(500, 461, 16, palette.red, b);
         break;
       }
       case "friendbirthday:0": {
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 4; j++) { captureGroup=++captureSerial;
           const x = 215 + j * 147,
             y = 200 + Math.sin(j) * 25;
           g.save();
@@ -2678,7 +2768,7 @@
           star(0, 55, 25, palette.white);
           text("БИЛЕТ", 0, 130, 12);
           g.restore();
-        }
+        captureGroup=null; }
         break;
       }
       case "friendbirthday:1": {
@@ -2714,7 +2804,7 @@
         break;
       }
       case "friendbirthday:2": {
-        for (let j = 0; j < 3; j++) {
+        for (let j = 0; j < 3; j++) { captureGroup=++captureSerial;
           const x = 195 + j * 215;
           rect(x, 150, 190, 310, palette.white);
           star(
@@ -2734,7 +2824,7 @@
           );
           line(x + 20, 175, x + 40, 205, ink, 2);
           line(x + 160, 175, x + 140, 205, ink, 2);
-        }
+        captureGroup=null; }
         break;
       }
       case "march:0": {
@@ -2747,12 +2837,12 @@
           ],
           palette.white,
         );
-        for (let j = 0; j < 9; j++) {
+        for (let j = 0; j < 9; j++) { captureGroup=++captureSerial;
           const u = j * 2.4,
             x = 500 + Math.cos(u) * 78,
             y = 238 + Math.sin(u) * 64;
           flower(x, y, 26, j % 2 ? palette.red : palette.purple, a);
-        }
+        captureGroup=null; }
         cut(
           [
             [446, 393],
@@ -2776,7 +2866,7 @@
         fan(500, 292, 90, palette.red, a);
         line(500, 294, 467, 415, palette.brown, 4);
         line(500, 294, 534, 415, palette.brown, 4);
-        for (let j = 0; j < 13; j++) {
+        for (let j = 0; j < 13; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 13;
           leaf(
             500 + Math.cos(u) * 150,
@@ -2785,11 +2875,11 @@
             u,
             palette.purple,
           );
-        }
+        captureGroup=null; }
         break;
       }
       case "march:2": {
-        for (let j = 0; j < 12; j++) {
+        for (let j = 0; j < 12; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 12;
           cut(
             [
@@ -2802,7 +2892,7 @@
             ],
             [palette.red, palette.blue, palette.green, palette.yellow][j % 4],
           );
-        }
+        captureGroup=null; }
         disk(500, 285, 35, palette.white);
         flower(500, 285, 24, palette.red, b);
         break;
@@ -2817,8 +2907,8 @@
             a,
           );
         line(155, 461, 850, 461, palette.brown, 2);
-        const x1 = 230 + 190 * a,
-          x2 = 770 - 190 * a;
+        const x1 = 230 + 245 * a,
+          x2 = 770 - 245 * a;
         disk(x1, 385, 12, palette.brown);
         disk(x2, 385, 12, palette.brown);
         cut(
@@ -2839,6 +2929,8 @@
           ],
           palette.blue,
         );
+        line(x1-10,449,x1-13,461,palette.brown,4);line(x1+10,449,x1+13,461,palette.brown,4);
+        line(x2-10,449,x2-13,461,palette.brown,4);line(x2+10,449,x2+13,461,palette.brown,4);
         heart(500, 240, 35, palette.yellow, b);
         break;
       }
@@ -2875,8 +2967,9 @@
             0.8,
             j + 1,
           );
-        const x = 400 + 180 * a,
-          y = 364 + Math.sin(clock * 0.5) * 4;
+        const x = 290 + 350 * a,
+          y = 364 + Math.sin(clock * 1.1) * 5;
+        g.save();g.translate(x,y);g.rotate(Math.sin(clock*1.1)*.035);g.translate(-x,-y);
         cut(
           [
             [x - 100, y],
@@ -2895,6 +2988,7 @@
           palette.white,
         );
         line(x, y, x, y - 142, palette.brown, 2);
+        g.restore();
         for (let j = 0; j < 13; j++)
           star(230 + j * 45, 145 + (j % 3) * 28, 5, palette.yellow, b);
         break;
@@ -2903,7 +2997,7 @@
         const x = 500,
           y = 280;
         crane(x, y, 160, palette.yellow, 0.25 + 0.75 * a);
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 7; j++) { captureGroup=++captureSerial;
           line(
             x - 130 + j * 13,
             y - 35,
@@ -2922,7 +3016,7 @@
             1,
             0.6,
           );
-        }
+        captureGroup=null; }
         hills();
         break;
       }
@@ -2952,7 +3046,7 @@
         break;
       }
       case "may7:2": {
-        for (let layer = 0; layer < 3; layer++) {
+        for (let layer = 0; layer < 3; layer++) { captureGroup=++captureSerial;
           const y = 440 - layer * 45;
           for (let j = 0; j < 10; j++) {
             const x = 130 + j * 76,
@@ -2969,14 +3063,14 @@
             for (let n = 0; n < 3; n++)
               rect(x + 12 + n * 16, y - h * a + 12, 7, 12, palette.yellow, b);
           }
-        }
+        captureGroup=null; }
         disk(720, 145, 43, palette.yellow);
         for (let j = 0; j < 6; j++)
           crane(270 + j * 55, 160 + (j % 2) * 15, 14, palette.white, a);
         break;
       }
       case "newyear:0": {
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < 7; j++) { captureGroup=++captureSerial;
           const x = 185 + j * 100,
             y = 400;
           house(x, y - 80 * a, 75, j % 2 ? palette.blue : palette.red, a);
@@ -2992,7 +3086,7 @@
             ],
             palette.white,
           );
-        }
+        captureGroup=null; }
         for (let j = 0; j < 25; j++)
           disk(
             180 + s.dots[j].s * 650,
@@ -3003,7 +3097,7 @@
         break;
       }
       case "newyear:1": {
-        for (let j = 0; j < 8; j++) {
+        for (let j = 0; j < 8; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 8;
           cut(
             [
@@ -3024,30 +3118,21 @@
             palette.brown,
             0.7,
           );
-        }
+        captureGroup=null; }
         disk(500, 285, 13, palette.blue);
         break;
       }
       case "newyear:2": {
-        disk(500, 390, 83, palette.white, k);
-        disk(500, 282, 64, palette.white, a);
-        disk(500, 188, 45, palette.white, b);
-        rect(452, 145, 96, 15, palette.dark, b);
-        rect(465, 110, 70, 39, palette.dark, b);
-        for (let j = 0; j < 3; j++) disk(500, 365 + j * 28, 4, palette.dark);
-        disk(485, 179, 3, palette.dark, b);
-        disk(515, 179, 3, palette.dark, b);
-        cut(
-          [
-            [499, 190],
-            [548, 197],
-            [500, 203],
-          ],
-          palette.red,
-          b,
-        );
-        line(428, 295, 352, 254, palette.brown, 3, a);
-        line(572, 295, 648, 254, palette.brown, 3, a);
+        const baseX=180+320*q(0,.25),bodyX=820-320*q(.2,.55),headY=75+113*q(.45,.8);
+        disk(baseX,390,83,palette.white);
+        for(let j=0;j<3;j++)disk(baseX,365+j*28,4,palette.dark);
+        disk(bodyX,282,64,palette.white,q(.12,.3));
+        line(bodyX-58,295,bodyX-148,254-15*Math.sin(clock*1.5)*b,palette.brown,3,a);
+        line(bodyX+58,295,bodyX+148,254+15*Math.sin(clock*1.5)*b,palette.brown,3,a);
+        disk(500,headY,45,palette.white,q(.35,.5));
+        disk(485,headY-9,3,palette.dark,q(.55,.7));disk(515,headY-9,3,palette.dark,q(.55,.7));
+        cut([[499,headY+2],[548,headY+9],[500,headY+15]],palette.red,q(.6,.8));
+        const hatY=20+125*q(.75,1);rect(452,hatY,96,15,palette.dark,b);rect(465,hatY-35,70,39,palette.dark,b);
         break;
       }
       case "september:0": {
@@ -3063,10 +3148,10 @@
         );
         rect(397, 292, 206, 110, palette.red, a);
         line(397, 314, 603, 314, palette.white, 2, a);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           rect(405 + j * 39, 170 - 80 * a, 27, 100, palette.white);
           star(419 + j * 39, 190 - 80 * a, 8, palette.yellow, b);
-        }
+        captureGroup=null; }
         line(390, 165, 390, 145, palette.brown, 8);
         line(610, 165, 610, 145, palette.brown, 8);
         break;
@@ -3147,7 +3232,7 @@
       }
       case "summer:0": {
         disk(745, 170, 40, palette.yellow);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const yy = 300 + j * 30;
           cut(
             [
@@ -3165,7 +3250,7 @@
             1,
             j + 1,
           );
-        }
+        captureGroup=null; }
         cut(
           [
             [100, 457],
@@ -3200,7 +3285,7 @@
           ],
           palette.red,
         );
-        for (let j = 0; j < 4; j++) {
+        for (let j = 0; j < 4; j++) { captureGroup=++captureSerial;
           const u = (j * Math.PI) / 2 + clock * 0.45 * a;
           cut(
             [
@@ -3211,7 +3296,7 @@
             ],
             j % 2 ? palette.blue : palette.yellow,
           );
-        }
+        captureGroup=null; }
         disk(500, 235, 9, palette.brown);
         for (let j = 0; j < 9; j++)
           flower(220 + j * 68, 435, 12, palette.red, b);
@@ -3219,7 +3304,7 @@
       }
       case "summer:2": {
         fan(500, 425, 240, palette.blue, 0.04 + 0.96 * a);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const u = -Math.PI / 2 + (j - 2) * 0.28;
           flower(
             500 + Math.cos(u) * 155,
@@ -3228,18 +3313,18 @@
             palette.red,
             b,
           );
-        }
+        captureGroup=null; }
         break;
       }
       case "memorial:0": {
-        crane(500, 280, 125, palette.white, 0.35 + 0.65 * a);
+        crane(420+110*a,320-40*a,125,palette.white,.35+.6*a+.04*Math.sin(clock*.7)*a);
         line(250, 425, 750, 425, palette.blue, 1, 0.4);
         for (let j = 0; j < 12; j++)
           disk(280 + j * 40, 445, 1.5, palette.brown, 0.25);
         break;
       }
       case "memorial:1": {
-        for (let j = 0; j < 26; j++) {
+        for (let j = 0; j < 26; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 26,
             x = 500 + Math.cos(u) * 155,
             y = 285 + Math.sin(u) * 155;
@@ -3252,7 +3337,7 @@
               palette.blue,
               q(0.03 + j * 0.018, 0.3 + j * 0.018),
             );
-        }
+        captureGroup=null; }
         text("Помним", 500, 293, 28, ink, b);
         break;
       }
@@ -3298,7 +3383,7 @@
         break;
       }
       case "newborn:1": {
-        for (let j = 0; j < 2; j++) {
+        for (let j = 0; j < 2; j++) { captureGroup=++captureSerial;
           const x = 410 + j * 180;
           cut(
             [
@@ -3324,14 +3409,14 @@
           for (let n = 0; n < 4; n++)
             line(x - 15 + n * 8, 270, x - 15 + n * 8, 295, palette.white, 2);
           star(x - 20, 355, 18, palette.yellow, b);
-        }
+        captureGroup=null; }
         break;
       }
       case "newborn:2": {
         for (let j = 0; j < 6; j++)
           disk(350 + j * 60, 224 + Math.sin(j) * 8, 48, palette.white);
         rect(350, 223, 300, 63, palette.white);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const x = 380 + j * 60,
             y = 310 + Math.sin(clock * 0.4 + j) * 5;
           line(x, 280, x, y + 30, palette.blue, 1);
@@ -3342,7 +3427,7 @@
             j % 2 ? palette.yellow : palette.blue,
             q(0.08 + j * 0.1, 0.35 + j * 0.1),
           );
-        }
+        captureGroup=null; }
         break;
       }
       case "nauryz:0": {
@@ -3402,7 +3487,7 @@
         break;
       }
       case "nauryz:2": {
-        for (let j = 0; j < 8; j++) {
+        for (let j = 0; j < 8; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 8 + clock * 0.25 * a;
           cut(
             [
@@ -3412,7 +3497,7 @@
             ],
             j % 2 ? palette.blue : palette.yellow,
           );
-        }
+        captureGroup=null; }
         disk(500, 285, 27, palette.white);
         star(500, 285, 15, palette.red);
         line(500, 285, 500, 485, palette.brown, 3);
@@ -3422,7 +3507,7 @@
         rect(300, 130, 400, 350, palette.white);
         rect(300, 130, 400, 62, palette.red);
         for (let j = 0; j < 5; j++) disk(340 + j * 80, 135, 8, palette.brown);
-        for (let j = 0; j < 28; j++) {
+        for (let j = 0; j < 28; j++) { captureGroup=++captureSerial;
           const x = 336 + (j % 7) * 53,
             y = 225 + Math.floor(j / 7) * 53;
           if (j === 12) heart(x + 13, y + 8, 19, palette.red, b);
@@ -3435,14 +3520,15 @@
               ink,
               q(0.04 + j * 0.018, 0.3 + j * 0.018),
             );
-        }
+        captureGroup=null; }
         break;
       }
       case "anniversary:1": {
         line(170, 155, 830, 155, palette.brown, 1.5);
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const x = 260 + j * 125,
             y = 180 + (j % 2) * 30;
+          line(x,155,x,y-13,palette.brown,1);
           g.save();
           g.translate(x, y);
           g.rotate(Math.sin(clock * 0.25 + j) * 0.025);
@@ -3453,11 +3539,11 @@
           line(-28, 114, 28, 114, palette.brown, 1);
           rect(-4, -14, 8, 27, palette.brown);
           g.restore();
-        }
+        captureGroup=null; }
         break;
       }
       case "anniversary:2": {
-        for (let j = 0; j < 13; j++) {
+        for (let j = 0; j < 13; j++) { captureGroup=++captureSerial;
           const u = j / 12,
             x1 = 190 + 620 * u,
             y1 = 390 - 100 * Math.sin(u * Math.PI) * a,
@@ -3481,7 +3567,7 @@
             ],
             palette.blue,
           );
-        }
+        captureGroup=null; }
         heart(500, 290, 32, palette.yellow, b);
         break;
       }
@@ -3533,6 +3619,7 @@
       case "halloween:1": {
         disk(535, 250, 130, palette.yellow);
         disk(575, 210, 115, "#ece3d3");
+        g.save();g.translate(-550*(1-a),0);
         disk(450, 335, 49, palette.dark);
         disk(450, 273, 32, palette.dark);
         cut(
@@ -3554,15 +3641,16 @@
         disk(440, 268, 3, palette.yellow);
         disk(462, 268, 3, palette.yellow);
         const tail = Array.from({ length: 22 }, (_, j) => [
-          413 - 30 * Math.sin((j / 21) * Math.PI),
+          413 - 30 * Math.sin((j / 21) * Math.PI)+Math.sin(clock*1.4)*j*.65,
           338 + j * 3,
         ]);
         for (let j = 1; j < tail.length; j++)
           line(...tail[j - 1], ...tail[j], palette.dark, 12);
+        g.restore();
         break;
       }
       case "halloween:2": {
-        for (let j = 0; j < 16; j++) {
+        for (let j = 0; j < 16; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 16;
           line(
             500,
@@ -3572,8 +3660,8 @@
             palette.dark,
             1.2,
           );
-        }
-        for (let ring = 1; ring < 7; ring++) {
+        captureGroup=null; }
+        for (let ring = 1; ring < 7; ring++) { captureGroup=++captureSerial;
           const r = ring * 27 * a,
             pts = Array.from({ length: 17 }, (_, j) => [
               500 + Math.cos((j * TAU) / 16) * r,
@@ -3581,20 +3669,22 @@
             ]);
           for (let j = 1; j < pts.length; j++)
             line(...pts[j - 1], ...pts[j], palette.dark, 0.9);
-        }
-        disk(635, 375, 15, palette.dark, b);
-        for (let j = 0; j < 8; j++) {
+        captureGroup=null; }
+        const sx=635,sy=205+170*b+Math.sin(clock*.7)*9*b;
+        line(sx,167,sx,sy,palette.dark,1,b);
+        disk(sx,sy,15,palette.dark,b);
+        for (let j = 0; j < 8; j++) { captureGroup=++captureSerial;
           const u = (j * TAU) / 8;
           line(
-            635 + Math.cos(u) * 12,
-            375 + Math.sin(u) * 12,
-            635 + Math.cos(u) * 30,
-            375 + Math.sin(u) * 30,
+            sx + Math.cos(u) * 12,
+            sy + Math.sin(u) * 12,
+            sx + Math.cos(u) * 30,
+            sy + Math.sin(u) * 30,
             palette.dark,
             2,
             b,
           );
-        }
+        captureGroup=null; }
         break;
       }
       case "wedding:0": {
@@ -3605,12 +3695,12 @@
             disk(x, y, 19, palette.white);
             disk(x, y, 7, "#ece3d3");
           }
-        for (let j = 0; j < 19; j++) {
+        for (let j = 0; j < 19; j++) { captureGroup=++captureSerial;
           const u = Math.PI + (j * Math.PI) / 18,
             x = 500 + Math.cos(u) * 175,
             y = 240 + Math.sin(u) * 105;
           flower(x, y, 14, palette.white, a);
-        }
+        captureGroup=null; }
         heart(500, 320, 43, palette.red, b);
         break;
       }
@@ -3621,7 +3711,7 @@
         g.scale(-1, 1);
         crane(380 + 35 * a, 280, 100, palette.white, 0.7 + 0.3 * a);
         g.restore();
-        for (let j = 0; j < 9; j++) {
+        for (let j = 0; j < 9; j++) { captureGroup=++captureSerial;
           const u = (j * Math.PI) / 8;
           leaf(
             500 + Math.cos(u) * 85,
@@ -3630,12 +3720,12 @@
             u,
             palette.green,
           );
-        }
+        captureGroup=null; }
         heart(500, 210, 25, palette.red, b);
         break;
       }
       case "wedding:2": {
-        for (let j = 0; j < 3; j++) {
+        for (let j = 0; j < 3; j++) { captureGroup=++captureSerial;
           const w = 290 - j * 75,
             x = 500 - w / 2,
             y = 420 - j * 88;
@@ -3651,7 +3741,7 @@
             const xx = x + 20 + (n * (w - 40)) / 8;
             disk(xx, y - 58, 7, palette.red, q(0.05 + j * 0.2, 0.35 + j * 0.2));
           }
-        }
+        captureGroup=null; }
         heart(500, 155, 30, palette.red, b);
         break;
       }
@@ -3699,7 +3789,7 @@
         break;
       }
       case "graduation:2": {
-        for (let j = 0; j < 14; j++) {
+        for (let j = 0; j < 14; j++) { captureGroup=++captureSerial;
           const x = 180 + j * 49,
             y = 390 - 95 * Math.sin((j / 13) * Math.PI) * a;
           cut(
@@ -3712,7 +3802,7 @@
             j % 2 ? palette.blue : palette.red,
           );
           line(x, y, x, 430, palette.brown, 1.5);
-        }
+        captureGroup=null; }
         cut(
           [
             [750, 170],
@@ -3750,7 +3840,7 @@
         rect(345, 155, 310, 268, palette.blue);
         line(500, 155, 500, 423, palette.brown, 5);
         line(345, 285, 655, 285, palette.brown, 5);
-        for (const dir of [-1, 1]) {
+        for (const dir of [-1, 1]) { captureGroup=++captureSerial;
           const x = dir < 0 ? 340 : 660;
           for (let j = 0; j < 7; j++) {
             const xx = x + dir * j * (11 - 6 * a);
@@ -3764,12 +3854,12 @@
               j % 2 ? palette.red : shade(palette.red, 1.12),
             );
           }
-        }
+        captureGroup=null; }
         disk(594, 197, 27, palette.yellow, b);
         break;
       }
       case "housewarming:2": {
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const x = 270 + j * 115,
             y = 420;
           cut(
@@ -3787,11 +3877,11 @@
             line(x, y, x, yy, palette.green, 2);
             leaf(x + dir * 19 * a, yy, 30, dir * -0.5, palette.green);
           }
-        }
+        captureGroup=null; }
         break;
       }
       case "success:0": {
-        for (let j = 0; j < 13; j++) {
+        for (let j = 0; j < 13; j++) { captureGroup=++captureSerial;
           const u = Math.PI * 0.18 + (j * Math.PI * 0.64) / 12;
           leaf(
             500 + Math.cos(u) * 145,
@@ -3807,7 +3897,7 @@
             u - 1,
             palette.green,
           );
-        }
+        captureGroup=null; }
         star(500, 280, 53, palette.yellow, b);
         cut(
           [
@@ -3825,7 +3915,7 @@
         break;
       }
       case "success:1": {
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const u = -Math.PI / 2 + (j * TAU) / 5;
           cut(
             [
@@ -3846,7 +3936,7 @@
             palette.brown,
             0.9,
           );
-        }
+        captureGroup=null; }
         break;
       }
       case "success:2": {
@@ -3885,8 +3975,9 @@
         break;
       }
       case "recovery:0": {
-        crane(500, 270, 125, palette.blue, 0.2 + 0.8 * a);
-        leaf(574, 306, 45, 0.35, palette.green);
+        const flight=q(.45,1),x=310+280*flight,y=370-135*flight;
+        crane(x,y,125,palette.blue,.2+.65*a+.15*a*Math.sin(clock*3.2));
+        leaf(x+74,y+36,45,.35,palette.green);
         for (let j = 0; j < 7; j++)
           star(300 + j * 66, 445 - (j % 2) * 15, 4, palette.yellow, b);
         break;
@@ -3924,7 +4015,7 @@
           palette.blue,
           palette.purple,
         ];
-        for (let j = 0; j < 5; j++) {
+        for (let j = 0; j < 5; j++) { captureGroup=++captureSerial;
           const r = 185 - j * 19;
           const pts = Array.from({ length: 50 }, (_, n) => {
             const u = Math.PI + (n * Math.PI) / 49;
@@ -3939,16 +4030,16 @@
             }),
           );
           cut(pts, colors[j], 1, j + 1);
-        }
-        for (const x of [330, 670]) {
+        captureGroup=null; }
+        for (const x of [330, 670]) { captureGroup=++captureSerial;
           disk(x, 387, 37, palette.white);
           disk(x + 26, 389, 27, palette.white);
           disk(x - 26, 397, 23, palette.white);
-        }
+        captureGroup=null; }
         break;
       }
     }
-    text("БУМАЖНАЯ МИНИАТЮРА", 500, 548, 11, ink, 0.45);
+    if(!s.workshopLive)text("БУМАЖНАЯ МИНИАТЮРА", 500, 548, 11, ink, 0.45);
     g.restore();
     s.artStats = { style: "paper" };
   }

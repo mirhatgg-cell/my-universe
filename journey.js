@@ -118,7 +118,7 @@
       eyebrow.className = "eyebrow";
       eyebrow.textContent = type.startsWith("pack:")
         ? "АНИМАЦИЯ " +
-          (i + 1) +
+          (Number(type.split(":")[3]) + 1) +
           " / 3 · " +
           ["ОБЪЕМ", "РИСУНОК", "БУМАГА"][Number(type.split(":")[3])]
         : "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
@@ -162,7 +162,10 @@
         canvas,
         ctx,
         type,
+        duration: type.startsWith("pack:")?AnimationPacks.duration(type):12,
         time: 0,
+        localPaused: false,
+        loop: false,
         visible: false,
         x: 0,
         y: 0,
@@ -180,6 +183,18 @@
         branches: [],
         targets: [],
       };
+      if(type.startsWith('pack:')){
+        const controls=document.createElement('div');controls.className='scene-controls';
+        const play=document.createElement('button');play.type='button';play.className='text-button';play.textContent='Ⅱ Стоп-кадр';play.setAttribute('aria-pressed','false');
+        const seek=document.createElement('input');seek.type='range';seek.min='0';seek.max=String(state.duration);seek.step='.05';seek.value='0';seek.setAttribute('aria-label','Момент анимации: '+sceneCopy[0]);
+        const time=document.createElement('output');time.textContent='0.0 с';
+        const label=document.createElement('label'),loop=document.createElement('input');loop.type='checkbox';label.append(loop,document.createTextNode(' Повторять'));
+        state.seek=seek;state.timeOutput=time;state.playButton=play;
+        play.onclick=()=>{state.localPaused=!state.localPaused;play.textContent=state.localPaused?'▷ Воспроизвести':'Ⅱ Стоп-кадр';play.setAttribute('aria-pressed',String(state.localPaused));wake();};
+        seek.oninput=()=>{state.time=Number(seek.value);state.localPaused=true;play.textContent='▷ Воспроизвести';play.setAttribute('aria-pressed','true');wake();};
+        loop.onchange=()=>{state.loop=loop.checked;wake();};
+        controls.append(play,seek,time,label);replay.before(controls);
+      }
       function branch(x, y, len, a, depth, start) {
         const ex = x + Math.cos(a) * len,
           ey = y + Math.sin(a) * len;
@@ -254,15 +269,19 @@
         state.pulse = 1;
         if (type === "theme:cake") state.clicked = !state.clicked;
         else if (type.startsWith("theme:") || type.startsWith("pack:"))
-          state.time = Universe.paused ? 12 : 0;
+          state.time = Universe.paused ? state.duration : 0;
+        state.localPaused=false;
+        if(state.playButton){state.playButton.textContent='Ⅱ Стоп-кадр';state.playButton.setAttribute('aria-pressed','false');}
         dirty = true;
         if (type === "gift") state.opened = !state.opened;
         else if (["flower", "path", "support"].includes(type))
-          state.time = Universe.paused ? 12 : 0;
+          state.time = Universe.paused ? state.duration : 0;
         wake();
       };
       replay.onclick = () => {
-        state.time = Universe.paused ? 12 : 0;
+        state.time = Universe.paused ? state.duration : 0;
+        state.localPaused=false;
+        if(state.playButton){state.playButton.textContent='Ⅱ Стоп-кадр';state.playButton.setAttribute('aria-pressed','false');}
         state.opened = false;
         state.clicked = false;
         state.pulse = 0;
@@ -339,7 +358,7 @@
     }
     g.setTransform(w / 1000, 0, 0, h / 600, 0, 0);
     g.clearRect(0, 0, 1000, 600);
-    const t = Universe.reduced && Universe.paused ? 12 : s.time;
+    const t = Universe.reduced && Universe.paused && !s.localPaused ? s.duration : s.time;
     const grad = g.createRadialGradient(500, 300, 0, 500, 300, 530);
     grad.addColorStop(0, window.UniverseTheme?.canvasCenter || "#181730");
     grad.addColorStop(1, window.UniverseTheme?.canvasEdge || "#040610");
@@ -633,15 +652,21 @@
     if (paused && !dirty) return false;
     if (!dirty && !paused && elapsed < 1 / 30) return true;
     active.forEach((s) => {
-      if (!paused) {
+      if (!paused && !s.localPaused) {
         s.time += elapsed;
+        if(s.loop&&s.time>=s.duration)s.time%=s.duration;
         s.pulse = Math.max(0, s.pulse - elapsed * 0.65);
       }
-      draw(s);
+      if(dirty || (!paused&&!s.localPaused))draw(s);
+      if(s.seek){
+        const displayTime=Universe.reduced&&paused&&!s.localPaused?s.duration:s.time;
+        s.seek.value=String(Math.min(s.duration,displayTime));
+        s.timeOutput.textContent=Math.min(s.duration,displayTime).toFixed(1)+' с';
+      }
     });
     elapsed = 0;
     dirty = false;
-    return !paused;
+    return !paused&&active.some(s=>!s.localPaused);
   });
   function wake() {
     dirty = true;

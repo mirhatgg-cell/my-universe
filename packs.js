@@ -46,7 +46,7 @@
     ],
     birthday: [
       {
-        title: "Желание становится созвездием",
+        title: "Зажигаем и задуваем свечу",
         id: "candlewish",
       },
       {
@@ -54,7 +54,7 @@
         id: "carousel",
       },
       {
-        title: "Комета твоего желания",
+        title: "Комета и её след",
         id: "comet",
       },
     ],
@@ -342,7 +342,7 @@
       styles = [
         "Объемная 3D-сцена",
         "Рисованная 2D-сцена",
-        "Бумажная миниатюра",
+        "Сборка бумажной миниатюры",
       ];
     return [
       titles[j],
@@ -366,12 +366,15 @@
       AnimationArt.volume(s, t, topic, +pack);
       return;
     }
+    if (+phase === 2 && topic==='newyear' && +pack===2) {
+      SnowWorkshop.draw(s,t);return;
+    }
     if (+phase === 2) {
-      AnimationArt.paper(s, t, topic, +pack);
+      PaperWorkshop.draw(s, t, topic, +pack);
       return;
     }
     // Every scene has its own complete timeline from beginning to final pose.
-    const p = smooth(t / (topic === "memorial" ? 11 : 8));
+    const p = clamp(t / 14);
     s.artStats = { style: "drawing" };
     const q = (a, b) => smooth((p - a) / (b - a));
     const clock = t,
@@ -780,49 +783,19 @@
     const quiet = topic === "memorial";
     g.save();
     g.translate(s.x * 9, s.y * 6);
+    // Bodies are present before an action. Hands, hinges and tools explain the force.
+    function palm(x,y,c=C.cream,angle=0){g.save();g.translate(x,y);g.rotate(angle);line(0,0,36,30,c,10);ellipse(0,0,12,8,c);for(let n=0;n<3;n++)line(-8+n*5,-3,-15+n*5,-12,c,3);g.restore();}
+    function walker(x,ground,c,walk=0,reach=null){const stride=Math.sin(walk)*11;disk(x,ground-69,9,C.cream);line(x,ground-57,x,ground-30,c,13);line(x,ground-30,x-12-stride,ground,c,5);line(x,ground-30,x+12+stride,ground,c,5);line(x,ground-53,reach?reach[0]:x+19,reach?reach[1]:ground-34,c,5);line(x,ground-50,x-15,ground-34,c,4);}
+    function watering(x,y,amount){rect(x-21,y-15,42,25,C.blue);arc(x-25,y-7,14,Math.PI/2,Math.PI*1.5,C.blue,4);line(x+15,y-8,x+58,y+5,C.blue,8);for(let j=0;j<12;j++){const u=(clock*.8+j/12)%1;disk(x+58+u*25,y+5+u*u*80,1.7,C.blue,amount*.8);}}
+    function plant(x,ground,height,open=1){line(x,ground,x,ground-height,C.green,3);for(let j=0;j<4;j++){const yy=ground-height*(.25+j*.18),dir=j%2?1:-1;ellipse(x+dir*12,yy,15,5,C.green,.9,dir*.4);}for(let j=0;j<7;j++){const a=j*TAU/7;ellipse(x+Math.cos(a)*12*open,ground-height+Math.sin(a)*12*open,12,5,C.pink,1,a);}disk(x,ground-height,5,C.gold);}
+    function hangingCrane(x,y,targetY){line(110,110,890,110,C.blue,6,.6);line(x,110,x,targetY-9,C.cream,2);rect(x-15,99,30,20,C.gold);arc(x,targetY-4,7,0,Math.PI,C.gold,3);}
     switch (story.id) {
       case "candlewish": {
-        const fire = q(0.05, 0.25),
-          release = q(0.34, 0.67),
-          sky = q(0.66, 0.95);
-        ellipse(500, 462, 160, 18, C.pink, 0.18);
-        rect(400, 380, 200, 72, "#d993b8");
-        ellipse(500, 380, 100, 20, C.cream);
-        for (let j = 0; j < 24; j++) {
-          const x = 405 + j * 8;
-          line(x, 405, x, 438, C.cream, 0.7, 0.12);
-          disk(x, 385 + Math.sin(j * 0.6) * 5, 1.3, j % 2 ? C.pink : C.gold);
-        }
-        ellipse(500, 450, 107, 9, C.cream, 0.14);
-        line(496, 309, 496, 371, C.cream, 1.2, 0.6);
-        for (let i = 0; i < 9; i++) disk(420 + i * 20, 397, 5, C.pink);
-        rect(492, 304, 16, 73, C.gold);
-        line(500, 304, 500, 292, C.cream);
-        flame(500, 290, 17, fire * (1 - release));
-        const pts = [
-          [290, 140],
-          [420, 105],
-          [530, 164],
-          [670, 112],
-          [728, 225],
-          [598, 259],
-          [451, 220],
-        ];
-        pts.forEach(([x, y], i) => {
-          const f = q(0.36 + i * 0.027, 0.65 + i * 0.027);
-          const xx = 500 + (x - 500) * f,
-            yy = 282 + (y - 282) * f;
-          glow(xx, yy, 22, C.gold, 0.3 * f);
-          star(xx, yy, 4 + 4 * sky, C.gold, f, clock * 0.08);
-          if (i)
-            line(pts[i - 1][0], pts[i - 1][1], x, y, C.blue, 1.5, sky * 0.7);
-        });
-        label("Загадай своё", 500, 510, 22, C.cream, Math.max(0,1-sky*3));
-        label(s.name, 500, 510, 24, C.gold, clamp((sky-.4)/.6));
+        rect(400,380,200,72,'#d993b8');ellipse(500,380,100,20,C.cream);rect(492,304,16,73,C.gold);line(500,304,500,292,C.cream,2);const ignite=q(.08,.18),blow=q(.48,.64);flame(500,290,17,ignite*(1-blow));if(p<.23){const u=q(.02,.14),x=680-180*u,y=250+40*u;line(x,y,x+35,y-30,C.gold,3);flame(x,y,5,1);palm(x+35,y-30);}walker(660,410,C.blue,0);if(p>.46&&p<.66)for(let j=0;j<3;j++)curve([[650,338+j*5],[580,312+j*5],[510,291+j*5]],C.blue,1,.35);for(let j=0;j<7;j++){const u=(clock*.35+j/7)%1;if(blow>0)ellipse(500+Math.sin(u*5)*8,289-u*90,4+u*8,3+u*6,C.cream,(1-u)*.15*blow);}label('Зажигаем свечу, загадываем желание и задуваем',500,515,20,C.cream,1);
         break;
       }
       case "carousel": {
-        const build = q(0, 0.3),
+        const build = 1,
           spin = q(0.32, 0.68),
           lights = q(0.65, 1);
         line(500, 158, 500, 447, C.gold, 6, build);
@@ -873,46 +846,16 @@
             lights * (0.65 + 0.3 * Math.sin(clock * 2 + j)),
           );
         }
+        rect(475,443,50,34,C.gold);disk(500,460,8,C.blue);
         label("Ещё один прекрасный круг", 500, 510, 22, C.cream, lights);
         break;
       }
       case "comet": {
-        const fly = q(0.12, 0.68),
-          finish = q(0.65, 1),
-          x = 130 + 650 * fly,
-          y = 150 + 150 * Math.sin(fly * Math.PI);
-        for (let j = 0; j < 80; j++) {
-          const z = Math.max(0, fly - j * 0.004);
-          line(
-            130 + 650 * z,
-            150 + 150 * Math.sin(z * Math.PI),
-            130 + 650 * (z + 0.004),
-            150 + 150 * Math.sin((z + 0.004) * Math.PI),
-            j % 2 ? C.blue : C.pink,
-            3,
-            (1 - j / 80) * (1 - finish),
-          );
-        }
-        glow(x, y, 55, C.blue, (1 - finish) * 0.6);
-        star(x, y, 10, C.cream, 1 - finish);
-        for (let j = 0; j < 50; j++) {
-          const a = j * 2.399,
-            r = 160 * Math.sqrt(j / 50) * finish;
-          star(
-            500 + Math.cos(a) * r,
-            285 + Math.sin(a) * r,
-            3 + (j % 4),
-            C.gold,
-            finish,
-            clock * 0.05,
-          );
-        }
-        burst(500, 280, 170, C.pink, clamp((p - 0.67) * 2));
-        label("Пусть найдёт тебя", 500, 500, 24, C.gold, finish);
+        const u=q(.02,.94),x=-100+1200*u,y=120+240*u;for(let j=0;j<65;j++){const z=Math.max(0,u-j*.0025);line(-100+1200*z,120+240*z,-100+1200*(z+.0025),120+240*(z+.0025),j%2?C.blue:C.pink,3,(1-j/65)*.65);}glow(x,y,45,C.blue,.5);star(x,y,10,C.cream);for(let j=0;j<8;j++){const z=Math.max(0,u-.35),xx=320+1200*z-j*8,yy=204+240*z+z*z*(j+1)*18;if(u>.35)disk(xx,yy,2,C.gold,.8);}label('Один источник движения: комета, её след и отделившиеся частицы',500,520,18,C.cream,1);
         break;
       }
       case "map": {
-        const unfold = q(0, 0.3),
+        const unfold = 1,
           route = q(0.3, 0.78),
           end = q(0.78, 1);
         g.save();
@@ -946,7 +889,7 @@
         );
         const rx = 175 + 635 * route,
           ry = 370 - 95 * Math.sin(route * Math.PI * 1.7);
-        disk(rx, ry, 8, C.orange, unfold);
+        line(rx,ry,rx+22,ry-32,C.gold,6);palm(rx+25,ry-35);
         line(810, 350, 810, 250, "#a34f57", 3, end);
         poly(
           [
@@ -955,7 +898,7 @@
             [810, 282],
           ],
           "#a34f57",
-          end,
+          1,
         );
         arc(800, 175, 26, 0, TAU, "#74624f", 2, unfold);
         line(800, 145, 800, 205, "#74624f", 1, unfold);
@@ -963,7 +906,7 @@
         break;
       }
       case "camp": {
-        const dusk = q(0, 0.3),
+        const dusk = 1,
           fire = q(0.32, 0.62),
           milky = q(0.65, 1);
         mountain(240, 405, 370, 210, "#24344a");
@@ -986,8 +929,9 @@
           C.ink,
           dusk,
         );
-        line(475, 440, 535, 419, C.gold, 7, fire);
-        line(478, 419, 535, 440, C.gold, 7, fire);
+        line(475, 440, 535, 419, C.gold, 7, 1);
+        line(478, 419, 535, 440, C.gold, 7, 1);
+        if(p<.38){const u=q(.06,.30);line(600-95*u,350+70*u,630-95*u,325+70*u,C.gold,3);flame(600-95*u,350+70*u,5,1);palm(630-95*u,325+70*u);}
         flame(505, 420, 25 + drift * 2, fire);
         for (let j = 0; j < 40; j++) {
           const d = s.dots[j],
@@ -1014,7 +958,7 @@
         break;
       }
       case "arcade": {
-        const on = q(0, 0.3),
+        const on = 1,
           run = q(0.32, 0.68),
           win = q(0.68, 1);
         rect(250, 95, 500, 390, "#2d2856", on);
@@ -1023,13 +967,16 @@
         for (let j = 0; j < 6; j++) {
           rect(310 + j * 65, 305 - (j % 3) * 30, 40, 8, C.blue, on);
         }
-        const x = 310 + 340 * run,
-          y = 326 - Math.abs(Math.sin(run * Math.PI * 4)) * 80;
-        rect(x - 10, y - 20, 20, 20, C.gold, on);
-        rect(x - 13, y - 7, 7, 13, C.orange, on);
-        rect(x + 6, y - 7, 7, 13, C.orange, on);
+        const step=Math.min(4,Math.floor(run*5)),u=run===1?1:run*5-step,
+          x=330+(step+u)*65,
+          startY=305-(step%3)*30,endY=305-((step+1)%3)*30,
+          y=startY+(endY-startY)*u-Math.sin(u*Math.PI)*70;
+        rect(x - 10, y - 30, 20, 23, C.gold, on);
+        rect(x - 13, y - 13, 7, 13, C.orange, on);
+        rect(x + 6, y - 13, 7, 13, C.orange, on);
         star(650, 210, 25, C.gold, win);
         label(win > 0.4 ? "LEVEL UP" : "PLAYER 1", 500, 177, 22, C.green, on);
+        palm(660,424+Math.sin(clock*5)*3);
         disk(660, 435, 18, C.pink, on);
         disk(610, 445, 12, C.gold, on);
         line(355, 442, 355, 415, C.blue, 5, on);
@@ -1037,114 +984,23 @@
         break;
       }
       case "greenhouse": {
-        const glass = q(0, 0.3),
-          grow = q(0.3, 0.68),
-          bloom = q(0.68, 1);
-        glow(750, 140, 150, C.gold, 0.2);
-        poly(
-          [
-            [220, 435],
-            [220, 208],
-            [500, 85],
-            [780, 208],
-            [780, 435],
-          ],
-          C.blue,
-          0.06 * glass,
-        );
-        curve(
-          [
-            [220, 435],
-            [220, 208],
-            [500, 85],
-            [780, 208],
-            [780, 435],
-          ],
-          C.blue,
-          3,
-          glass,
-        );
-        for (let j = 0; j < 5; j++) {
-          const x = 280 + j * 110;
-          line(x, 435, x, 180 - Math.abs(j - 2) * 8, C.blue, 1, glass * 0.4);
-          flower(
-            x,
-            370 - grow * (70 + (j % 2) * 45),
-            24 + 10 * bloom,
-            j % 2 ? C.pink : C.gold,
-            grow,
-          );
-        }
-        line(220, 435, 780, 435, C.gold, 3, glass);
-        for (let j = 0; j < 12; j++) {
-          const a = j * 0.9 + clock * 0.3;
-          bird(
-            280 + j * 37 + Math.sin(a) * 15,
-            160 + Math.sin(a * 1.3) * 35,
-            5,
-            C.pink,
-            bloom,
-          );
-        }
+        const water=q(.04,.23),grow=q(.27,.83);curve([[170,455],[170,190],[500,80],[830,190],[830,455]],C.blue,3,.65);for(let j=0;j<7;j++)line(200+j*100,445,200+j*100,185,C.blue,1,.2);
+        ellipse(500,465,340,20,'#795f4e');for(let j=0;j<6;j++){const x=240+j*105,h=(40+65*grow),ground=455;ellipse(x,453,8,4,C.gold);plant(x,ground,h,.18+.82*q(.55,.9));}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем почву → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "petaldance": {
-        const wind = q(0, 0.34),
-          braid = q(0.34, 0.7),
-          mandala = q(0.7, 1);
-        for (let j = 0; j < 120; j++) {
-          const d = s.dots[j],
-            a = j * 2.399 + clock * 0.15;
-          const r = 25 + Math.sqrt(j / 120) * 175;
-          const sx = 140 + d.s * 700,
-            sy = 400 - d.r * 200;
-          const mx = 500 + Math.cos(a) * r,
-            my = 280 + Math.sin(a) * r;
-          const k = mandala;
-          const x =
-              sx * (1 - k) + mx * k + Math.sin(clock + j) * wind * (1 - k) * 45,
-            y =
-              sy * (1 - k) +
-              my * k +
-              Math.sin(j * 0.2 + clock) * braid * (1 - k) * 80;
-          ellipse(
-            x,
-            y,
-            5 + d.s * 5,
-            2 + d.r * 3,
-            j % 3 ? C.pink : C.cream,
-            wind,
-            a,
-          );
-        }
-        glow(500, 280, 230, C.pink, 0.12 * mandala);
-        disk(500, 280, 13, C.gold, mandala);
+        const wind=q(.12,.88);for(let j=0;j<8;j++)plant(160+j*92,460,60+(j%3)*25,1);for(let j=0;j<48;j++){const seed=j%8,release=.10+j*.009,u=clamp((p-release)/.55),sx=160+seed*92,sy=400-(seed%3)*25,x=sx+u*300,y=sy-80*Math.sin(Math.PI*u)+u*120;ellipse(x,y,7,3,j%2?C.pink:C.cream,1,j*.3+u*4);}for(let j=0;j<5;j++)curve([[140,210+j*15],[300+wind*300,195+j*15],[740,210+j*15]],C.blue,1,.12);label('Ветер снимает лепестки с цветов и несёт к земле',500,545,20,C.cream,1);
         break;
       }
       case "watercolor": {
-        const wet = q(0, 0.32),
-          color = q(0.3, 0.69),
-          reveal = q(0.67, 1);
-        rect(190, 105, 620, 365, "#e8dfe0", 0.95 * wet);
-        for (let j = 0; j < 35; j++) {
-          const d = s.dots[j],
-            a = q(0.15 + j * 0.008, 0.47 + j * 0.008);
-          ellipse(
-            260 + d.s * 480,
-            160 + d.r * 220,
-            15 + 40 * a,
-            10 + 25 * a,
-            j % 3 === 0 ? "#b7cbbb" : j % 3 === 1 ? "#d9a5b5" : "#cbb7d7",
-            0.075 * color,
-          );
-        }
-        for (let j = 0; j < 9; j++)
-          flower(260 + j * 60, 385 - (j % 3) * 42, 17, "#c37d94", reveal);
-        label("У каждого цветка свой ритм", 500, 510, 22, C.cream, reveal);
+        rect(160,100,680,380,'#e8dfe0');const pts=Array.from({length:140},(_,j)=>[240+j*3.8,285+Math.sin(j*.075)*85]);const u=q(.05,.85),n=Math.min(139,Math.floor(u*139));for(let j=0;j<=n;j++)ellipse(pts[j][0],pts[j][1],17,22,j<46?'#b7cbbb':j<94?'#d9a5b5':'#cbb7d7',.12);const [x,y]=pts[n];line(x,y,x+45,y-65,C.gold,9);line(x,y,x+7,y-11,C.pink,13);palm(x+38,y-55);for(const [xx,c] of [[225,'#b7cbbb'],[290,'#d9a5b5'],[355,'#cbb7d7']])disk(xx,440,20,c);label('Кисть оставляет пигмент на влажной бумаге',500,520,22,C.cream,1);
         break;
       }
       case "embroidery": {
-        const hoop = q(0, 0.3),
+        const hoop = 1,
           stitch = q(0.3, 0.8),
           finish = q(0.8, 1);
         arc(500, 280, 175, 0, TAU, C.gold, 10, hoop);
@@ -1185,6 +1041,7 @@
           1.3,
           hoop * (1 - finish),
         );
+        if(finish<1)palm(x+28*(1-finish),y-42*(1-finish));
         rect(483, 91, 34, 24, C.gold, hoop);
         label(s.name, 500, 510, 24, C.pink, finish);
         break;
@@ -1218,11 +1075,11 @@
           1.5,
           clear * 0.7,
         );
-        heart(500, 235, 18, C.pink, clear);
+        walker(320+35*lit,340,C.pink,lit*12);walker(590+35*lit,305,C.blue,lit*12);
         break;
       }
       case "cranes": {
-        const fold = q(0, 0.3),
+        const fold = 1,
           fly = q(0.3, 0.7),
           meet = q(0.7, 1);
         for (let j = 0; j < 2; j++) {
@@ -1266,6 +1123,7 @@
           line(-60, 4, -90, 20, C.cream, 1, 0.4 * fly);
           g.restore();
         }
+        if(p<.4){palm(240-150*q(.3,.45),399);palm(760+150*q(.3,.45),399);}
         disk(500, 180, 40, C.gold, 0.12 * meet);
         bird(500, 155, 12, C.gold, drift);
         break;
@@ -1287,9 +1145,10 @@
         g.strokeStyle = C.blue;
         g.lineWidth = 4;
         g.beginPath();
-        g.ellipse(500, 440, 330 * shield, 280 * shield, 0, Math.PI, TAU);
+        g.ellipse(500,440,330,280,0,Math.PI,Math.PI+Math.PI*shield);
         g.stroke();
         g.restore();
+        rect(480,430,40,30,C.blue);line(500,430,500,160,C.blue,2,.1*shield);
         glow(500, 210, 170, C.blue, 0.13 * shield);
         disk(720, 150, 38, C.gold, peace);
         for (let j = 0; j < 9; j++)
@@ -1315,8 +1174,8 @@
             0.5,
           );
         }
-        const x = 180 + 610 * flight,
-          y = 330 - 170 * flight;
+        const x = -100 + 950 * flight,
+          y = 425 - 245 * flight*flight;
         curve(
           Array.from({ length: 45 }, (_, j) => [180 + j * 14, 330 - j * 3.9]),
           C.cream,
@@ -1356,6 +1215,7 @@
           C.gold,
         );
         g.restore();
+        line(80,445,880,445,C.cream,2,.25);
         break;
       }
       case "beacon": {
@@ -1406,6 +1266,7 @@
           C.gold,
           0.11 * light,
         );
+        disk(730,180,7,C.gold,1);
         boat(190 + 385 * harbour, 415 + drift * 3, 0.65);
         poly(
           [
@@ -1420,9 +1281,9 @@
         break;
       }
       case "wintertrain": {
-        const rail = q(0, 0.3),
+        const rail = 1,
           travel = q(0.3, 0.69),
-          city = q(0.69, 1);
+          city = 1;
         mountain(260, 372, 300, 170, "#283953");
         mountain(710, 372, 400, 225, "#23314a");
         line(90, 440, 900, 440, C.blue, 3, rail);
@@ -1461,12 +1322,12 @@
           rect(x - j * 100 + 8, 385, 20, 20, C.gold, rail);
           rect(x - j * 100 + 39, 385, 20, 20, C.gold, rail);
           for (let k = 0; k < 2; k++) {
-            disk(x - j * 100 + 18 + k * 48, 433, 9, C.ink, rail);
+            disk(x - j * 100 + 18 + k * 48, 431, 9, C.ink, rail);
             line(
               x - j * 100 + 18 + k * 48,
-              433,
-              x - j * 100 + 18 + k * 48 + Math.cos(travel * 35) * 7,
-              433 + Math.sin(travel * 35) * 7,
+              431,
+              x - j * 100 + 18 + k * 48 + Math.cos(travel * (650/9)) * 7,
+              431 + Math.sin(travel * (650/9)) * 7,
               C.cream,
               2,
               rail,
@@ -1511,53 +1372,11 @@
         break;
       }
       case "snowforge": {
-        const seed = q(0, 0.3),
-          grow = q(0.3, 0.67),
-          glass = q(0.67, 1);
-        for (let f = 0; f < 7; f++) {
-          const a = (f * TAU) / 6,
-            xx = f === 6 ? 500 : 500 + Math.cos(a) * 220 * glass,
-            yy = f === 6 ? 280 : 280 + Math.sin(a) * 150 * glass;
-          g.save();
-          g.translate(xx, yy);
-          g.rotate(clock * 0.035 * (f % 2 ? 1 : -1));
-          const r = f === 6 ? 95 : 50;
-          for (let j = 0; j < 6; j++) {
-            const a = (j * TAU) / 6;
-            line(
-              0,
-              0,
-              Math.cos(a) * r * grow,
-              Math.sin(a) * r * grow,
-              C.blue,
-              2,
-              seed,
-            );
-            for (let k = 1; k < 4; k++) {
-              const len = (r * k) / 4,
-                b = q(0.32 + k * 0.04, 0.64 + k * 0.03);
-              for (const sign of [-1, 1])
-                line(
-                  Math.cos(a) * len,
-                  Math.sin(a) * len,
-                  Math.cos(a) * len +
-                    Math.cos(a + (sign * Math.PI) / 3) * r * 0.18 * b,
-                  Math.sin(a) * len +
-                    Math.sin(a + (sign * Math.PI) / 3) * r * 0.18 * b,
-                  C.cream,
-                  1.5,
-                  seed,
-                );
-            }
-          }
-          disk(0, 0, 4, C.cream, seed);
-          g.restore();
-        }
-        arc(500, 280, 210, 0, TAU, C.purple, 1, glass * 0.4);
+        const grow=q(.1,.88);disk(500,280,4,C.cream);for(let j=0;j<6;j++){const a=j*TAU/6;line(500,280,500+Math.cos(a)*150*grow,280+Math.sin(a)*150*grow,C.blue,3);for(let k=1;k<=3;k++){const u=clamp((grow-k*.19)*4),r=k*35;for(const dir of [-1,1])if(grow*150>=r)line(500+Math.cos(a)*r,280+Math.sin(a)*r,500+Math.cos(a)*r+Math.cos(a+dir*Math.PI/3)*32*u,280+Math.sin(a)*r+Math.sin(a+dir*Math.PI/3)*32*u,C.cream,2);}for(let n=0;n<12;n++){const u=(clock*.24+n/12)%1,r=150*grow+100*(1-u);disk(500+Math.cos(a)*r,280+Math.sin(a)*r,1.7,C.blue,.8);}}label('Частицы подходят к граням; ветви растут от центра · условная микросъёмка',500,520,17,C.cream,1);
         break;
       }
       case "aurora": {
-        const night = q(0, 0.3),
+        const night = 1,
           lights = q(0.3, 0.72),
           midnight = q(0.72, 1);
         for (let j = 0; j < 45; j++)
@@ -1592,6 +1411,7 @@
             );
           }
         }
+        // Light varies while the landscape and moon remain present.
         disk(760, 110, 28, C.cream, night * 0.7);
         label("00:00", 500, 390, 32, C.cream, midnight);
         snow(25, 0.3);
@@ -1614,6 +1434,8 @@
           g.stroke();
           g.restore();
         }
+        for(const xx of [460,540])line(xx,350,500,210,C.blue,1,.22*world);
+        label("Световая проекция из книги",500,510,20,C.cream,1);
         glow(500, 210, 70, C.blue, 0.3 * world);
         disk(500, 210, 25, C.blue, world);
         for (let j = 0; j < 10; j++) {
@@ -1623,69 +1445,28 @@
         break;
       }
       case "schooldomino": {
-        const ready = q(0, 0.3),
+        const ready = 1,
           chain = q(0.3, 0.85),
           answer = q(0.84, 1);
         for (let j = 0; j < 12; j++) {
           const x = 190 + j * 54,
-            y = 400 - Math.sin((j / 11) * Math.PI) * 80,
-            fall = smooth((chain * 14 - j) / 2);
+            y = 420,
+            fall = smooth((chain*12.8-j*.8)/2);
           g.save();
           g.translate(x, y);
-          g.rotate(fall * Math.PI * 0.43);
+          g.rotate(fall * Math.acos(24/54));
           rect(-12, -80, 24, 80, j % 2 ? C.blue : C.purple, ready);
           label(j === 0 ? "?" : String(j), 0, -43, 17, C.ink, ready);
           g.restore();
         }
+        line(170,420,875,420,C.cream,2,.5);palm(178+Math.min(20,chain*50),355,C.cream,.1);
         glow(820, 245, 100, C.gold, 0.3 * answer);
         star(820, 245, 38, C.gold, answer);
         label("Один вопрос открывает следующий", 500, 510, 20, C.cream, answer);
         break;
       }
       case "blueprint": {
-        const draft = q(0, 0.34),
-          raise = q(0.34, 0.71),
-          built = q(0.71, 1);
-        for (let i = 0; i < 17; i++)
-          line(140 + i * 45, 110, 140 + i * 45, 455, C.blue, 1, 0.07);
-        for (let i = 0; i < 8; i++)
-          line(140, 110 + i * 45, 860, 110 + i * 45, C.blue, 1, 0.07);
-        const pts = [
-          [180, 410],
-          [300, 410],
-          [350, 190],
-          [650, 190],
-          [700, 410],
-          [820, 410],
-        ];
-        curve(pts, C.blue, 2, 0.7, draft);
-        const n = Math.min(5, Math.floor(draft * 5));
-        line(
-          pts[n][0],
-          pts[n][1],
-          pts[n][0] + 20,
-          pts[n][1] - 32,
-          C.gold,
-          5,
-          1 - raise,
-        );
-        line(170, 410, 830, 410, C.cream, 6, raise);
-        for (let j = 0; j < 11; j++) {
-          const x = 230 + j * 54,
-            y = 220 + ((x - 500) / 300) ** 2 * 150;
-          line(x, 410, x, 410 + (y - 410) * raise, C.gold, 2, raise);
-          if (j)
-            line(
-              x - 54,
-              220 + ((x - 554) / 300) ** 2 * 150,
-              x,
-              y,
-              C.blue,
-              4,
-              raise,
-            );
-        }
-        boat(500, 448, 0.35, built);
+        const draw=q(.02,.30),install=q(.34,.90);for(let i=0;i<17;i++)line(140+i*45,110,140+i*45,455,C.blue,1,.08);const points=[[220,410],[220,200],[780,200],[780,410]];curve(points,C.blue,2,.5,draw);const n=Math.min(2,Math.floor(draw*3)),u=draw===1?1:draw*3-n,x=points[n][0]+(points[n+1][0]-points[n][0])*u,y=points[n][1]+(points[n+1][1]-points[n][1])*u;if(draw<1){line(x,y,x+20,y-35,C.gold,5);palm(x+20,y-35);}line(150,445,850,445,C.cream,3);for(let j=0;j<6;j++){const u=clamp(install*6-j),tx=250+j*95,xx=tx+(850+j*20-tx)*(1-u),yy=410-200*Math.sin(Math.PI*u);rect(xx-8,yy-180,16,180,C.gold);if(u>0&&u<1)hangingCrane(xx,0,yy-180);}label('Чертёж → подъём готовых стоек → установка на основание',500,530,19,C.cream,1);
         break;
       }
       case "tidal": {
@@ -1731,10 +1512,11 @@
             4,
             9,
             "#6b655f",
-            shore,
+            clamp(shore*7-j),
             Math.PI * 0.25,
           );
         }
+        walker(410+154*shore,513,C.cream,shore*23);
         poly(
           [
             [730, 463],
@@ -1743,41 +1525,16 @@
             [754, 477],
           ],
           C.pink,
-          shore,
+          1,
         );
         break;
       }
       case "meadowlife": {
-        const grow = q(0, 0.33),
-          bee = q(0.33, 0.7),
-          flutter = q(0.7, 1);
-        for (let j = 0; j < 24; j++) {
-          const x = 140 + j * 31,
-            y = 400 + Math.sin(j) * 20;
-          line(
-            x,
-            y + 50,
-            x + Math.sin(clock + j) * 3,
-            y + 50 - 70 * grow,
-            C.green,
-            2,
-            0.6,
-          );
-          if (j % 3 === 0)
-            flower(x, y + 30 - 60 * grow, 13, j % 2 ? C.pink : C.gold, grow);
-        }
-        const x = 170 + 650 * bee,
-          y = 220 + Math.sin(bee * TAU * 2) * 60;
-        ellipse(x, y, 12, 7, C.gold, bee);
-        line(x - 3, y - 6, x - 3, y + 6, C.ink, 3, bee);
-        ellipse(x - 5, y - 11, 8, 4, C.cream, bee * 0.7, drift);
-        for (let j = 0; j < 14; j++) {
-          const a = clock * 0.5 + j,
-            x = 190 + j * 45,
-            y = 190 + Math.sin(a) * 35;
-          ellipse(x - 5, y, 7, 11, C.pink, flutter, Math.sin(a) * 0.7);
-          ellipse(x + 5, y, 7, 11, C.blue, flutter, -Math.sin(a) * 0.7);
-        }
+        const water=q(.04,.23),grow=q(.27,.83);
+        ellipse(500,465,410,40,'#476857');for(let j=0;j<12;j++){const x=160+j*62,h=(40+65*grow),ground=455;ellipse(x,453,8,4,C.gold);plant(x,ground,h,.18+.82*q(.55,.9));}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем луг → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "kite": {
@@ -1816,6 +1573,7 @@
           ],
           C.purple,
         );
+        line(257,399,250,395,C.cream,4);
         const tail = Array.from({ length: 55 }, (_, i) => [
           x + Math.sin(i * 0.15 - clock) * i * 0.7 * free,
           y + 45 + i * 2,
@@ -1831,13 +1589,13 @@
               [xx - 8, yy + 4],
             ],
             C.blue,
-            free,
+            1,
           );
         }
         break;
       }
       case "memwater": {
-        const flameOn = q(0, 0.33),
+        const flameOn = 1,
           away = q(0.33, 0.75),
           lasting = q(0.75, 1),
           x = 320 + 310 * away,
@@ -1873,71 +1631,24 @@
             (1 - j / 18) * 2,
             (1 - j / 18) * 0.2 * flameOn,
           );
+        if(p<.4)palm(320-160*q(.33,.48),402);
         glow(640, 200, 95, C.gold, 0.09 * lasting);
         break;
       }
       case "album": {
-        const open = q(0, 0.33),
-          photos = q(0.33, 0.7),
-          memory = q(0.7, 1);
-        book(500, 225, 240, 220, 0.04 + 0.96 * open);
-        for (let j = 0; j < 4; j++) {
-          const x = 320 + (j % 2) * 250,
-            y = 250 + Math.floor(j / 2) * 83,
-            a = q(0.34 + j * 0.045, 0.6 + j * 0.045);
-          rect(x, y, 100, 66, "#9c9794", a);
-          disk(x + 74, y + 18, 10, "#ead6b2", a * 0.65);
-          poly(
-            [
-              [x, y + 57],
-              [x + 30, y + 27],
-              [x + 60, y + 50],
-              [x + 84, y + 32],
-              [x + 100, y + 57],
-            ],
-            "#65776f",
-            a,
-          );
-          line(x + 8, y + 73, x + 89, y + 73, "#979194", 1, a);
-        }
-        glow(500, 337, 130, C.gold, 0.07 * memory);
-        label("То, что дорого, остаётся", 500, 516, 22, C.cream, memory);
+        book(500,225,240,220,1);for(let j=0;j<4;j++){const u=q(.08+j*.18,.24+j*.18),tx=320+(j%2)*250,ty=250+Math.floor(j/2)*83,x=tx+(840-tx)*(1-u),y=ty+(465-ty)*(1-u)-Math.sin(Math.PI*u)*90;rect(x,y,100,66,'#9c9794');disk(x+74,y+18,10,'#ead6b2',.65);poly([[x,y+57],[x+30,y+27],[x+60,y+50],[x+84,y+32],[x+100,y+57]],'#65776f');if(u>0&&u<1)palm(x+85,y+55);if(u===1){line(x-2,y,x+12,y,C.cream,3);line(x+88,y+66,x+102,y+66,C.cream,3);}}label('Вкладываем снимки в уголки альбома',500,520,22,C.cream,1);
         break;
       }
       case "memorygarden": {
-        const sprout = q(0.1, 0.4),
-          tree = q(0.4, 0.78),
-          warm = q(0.78, 1);
-        ellipse(500, 449, 150, 16, "#849587", 0.22);
-        line(500, 449, 500, 449 - 215 * tree, "#b0a493", 5);
-        for (let j = 0; j < 12; j++) {
-          const a = j * 0.75,
-            len = (45 + (j % 4) * 13) * tree,
-            y = 405 - j * 12;
-          line(
-            500,
-            y,
-            500 + Math.cos(a) * len,
-            y - Math.abs(Math.sin(a)) * len,
-            "#b0a493",
-            2,
-          );
-          ellipse(
-            500 + Math.cos(a) * len,
-            y - Math.abs(Math.sin(a)) * len,
-            20 * sprout,
-            9 * sprout,
-            "#9bbba9",
-            0.6,
-            a,
-          );
-        }
-        glow(500, 292, 180, C.gold, 0.1 * warm);
-        disk(620, 207, 17, C.gold, 0.45 * warm);
+        const water=q(.04,.23),grow=q(.27,.83);
+        ellipse(500,465,180,20,'#795f4e');const top=455-240*grow;line(500,455,500,top,'#ac8d70',8);for(let j=0;j<12;j++){const u=clamp((grow-.12-j*.035)*3),yy=440-j*15,dir=j%2?1:-1,xx=500+dir*(40+j%3*18)*u;if(top<yy){line(500,yy,xx,yy-25*u,'#ac8d70',3);ellipse(xx,yy-25*u,Math.max(.1,20*u),Math.max(.1,8*u),C.green,1,dir*-.4);}}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем почву → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "nursery": {
-        const room = q(0, 0.3),
+        const room = 1,
           rock = q(0.3, 0.7),
           stars = q(0.7, 1);
         rect(650, 115, 130, 160, C.blue, 0.1 * room);
@@ -1954,39 +1665,21 @@
         line(-65, 35, -80, 76, C.gold, 4, room);
         line(65, 35, 80, 76, C.gold, 4, room);
         g.restore();
+        palm(365,364+Math.sin(clock*.8)*3);
         for (let j = 0; j < 14; j++)
-          star(300 + j * 30, 155 + Math.sin(j * 0.65) * 35, 5, C.gold, stars);
+          star(300+j*30,155+Math.sin(j*.65)*35,5,C.gold,.6+.3*Math.sin(clock+j));
         break;
       }
       case "sprout": {
-        const seed = q(0, 0.3),
-          stem = q(0.3, 0.68),
-          leaves = q(0.68, 1);
-        ellipse(500, 442, 135, 22, "#835f57", seed);
-        ellipse(500, 431, 10, 7, C.gold, seed * (1 - stem));
-        const y = 429 - 180 * stem;
-        line(500, 429, 500, y, C.green, 5, seed);
-        for (let j = 0; j < 4; j++) {
-          const k = q(0.45 + j * 0.09, 0.65 + j * 0.1),
-            dir = j % 2 ? 1 : -1,
-            yy = 390 - j * 32;
-          ellipse(
-            500 + dir * 26 * k,
-            yy,
-            35 * k,
-            13 * k,
-            C.green,
-            0.8,
-            dir * -0.5,
-          );
-        }
-        glow(500, 240, 140, C.gold, 0.12 * leaves);
-        for (let j = 0; j < 5; j++)
-          disk(440 + j * 30, 155 + (j % 2) * 30, 3, C.gold, leaves);
+        const water=q(.04,.23),grow=q(.27,.83);
+        ellipse(500,465,340,20,'#795f4e');for(let j=0;j<1;j++){const x=500,h=(40+150*grow),ground=455;ellipse(x,453,8,4,C.gold);line(x,ground,x,ground-170*grow,C.green,5);for(let n=0;n<4;n++){const u=clamp((grow-.2-n*.15)*5),yy=430-n*30,dir=n%2?1:-1;if(455-170*grow<yy){line(x,yy,x+dir*24*u,yy-10*u,C.green,2);ellipse(x+dir*24*u,yy-10*u,Math.max(.1,28*u),Math.max(.1,11*u),C.green,1,dir*-.3);}}}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем почву → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "mobileflight": {
-        const balance = q(0, 0.3),
+        const balance = 1,
           spin = q(0.3, 0.7),
           shine = q(0.7, 1);
         line(500, 70, 500, 170, C.cream, 2, balance);
@@ -2013,69 +1706,20 @@
             );
           }
         }
+        rect(486,72,28,25,C.gold);disk(500,85,7,C.blue);
         glow(500, 300, 160, C.blue, 0.1 * shine);
         break;
       }
       case "steppespring": {
-        const thaw = q(0, 0.34),
-          water = q(0.34, 0.67),
-          flowers = q(0.67, 1);
-        poly(
-          [
-            [100, 380],
-            [900, 355],
-            [900, 490],
-            [100, 490],
-          ],
-          "#849b88",
-        );
-        poly(
-          [
-            [100, 380],
-            [900, 355],
-            [900, 470 - thaw * 110],
-            [100, 490 - thaw * 100],
-          ],
-          C.cream,
-          0.8 * (1 - thaw),
-        );
-        curve(
-          [
-            [100, 430],
-            [280, 420],
-            [390, 375],
-            [590, 397],
-            [900, 363],
-          ],
-          C.blue,
-          12,
-          0.4 * water,
-        );
-        for (let j = 0; j < 26; j++) {
-          const x = 145 + j * 28,
-            y = 400 + (j % 4) * 17;
-          const f = q(0.65 + j * 0.005, 0.88 + j * 0.004);
-          line(x, y + 40, x, y, C.green, 2, f);
-          poly(
-            [
-              [x - 10, y - 10],
-              [x - 9, y + 4],
-              [x, y + 10],
-              [x + 9, y + 4],
-              [x + 10, y - 10],
-              [x + 3, y - 3],
-              [x, y - 14],
-              [x - 3, y - 3],
-            ],
-            j % 2 ? C.pink : C.gold,
-            f,
-          );
-        }
-        disk(740, 150, 37, C.gold, flowers);
+        const water=q(.04,.23),grow=q(.27,.83);disk(740,135,42,C.gold);for(let j=0;j<8;j++)ellipse(170+j*95,465,35*(1-q(0,.28)),8,C.cream,.9);
+        ellipse(500,465,340,20,'#795f4e');for(let j=0;j<6;j++){const x=240+j*105,h=(40+65*grow),ground=455;ellipse(x,453,8,4,C.gold);line(x,ground,x,ground-h,C.green,3);const yy=ground-h,open=.2+.8*q(.55,.9);poly([[x-13*open,yy-18],[x-10,yy+6],[x,yy+12],[x+10,yy+6],[x+13*open,yy-18],[x+4,yy-6],[x,yy-20],[x-4,yy-6]],j%2?C.pink:C.gold);}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем почву → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "shanyrak": {
-        const frame = q(0, 0.33),
+        const frame = 1,
           rays = q(0.33, 0.7),
           sun = q(0.7, 1);
         g.save();
@@ -2109,12 +1753,13 @@
             C.gold,
             0.025 * rays,
           );
+        const sx=420+160*sun;disk(sx,120,24,C.gold);
         glow(500, 250, 140, C.gold, 0.18 * sun);
         label("Жаңа күн. Жаңа өмір.", 500, 510, 22, C.gold, sun);
         break;
       }
       case "springriver": {
-        const ice = q(0, 0.3),
+        const ice = 1,
           crack = q(0.3, 0.7),
           flow = q(0.7, 1);
         poly(
@@ -2128,7 +1773,7 @@
           0.25,
         );
         for (let j = 0; j < 11; j++) {
-          const y = 155 + j * 28,
+          const y = 155+j*28+flow*460,
             w = 80 + j * 9;
           poly(
             [
@@ -2138,7 +1783,7 @@
               [480 - w, y + 28],
             ],
             C.cream,
-            ice * (1 - flow) * 0.7,
+            ice*.7,
           );
           curve(
             [
@@ -2169,39 +1814,25 @@
         break;
       }
       case "treerings": {
-        const core = q(0, 0.33),
-          years = q(0.33, 0.8),
-          together = q(0.8, 1);
-        disk(500, 280, 175, "#8b6e60", core * 0.6);
-        for (let j = 0; j < 24; j++) {
-          const f = q(0.1 + j * 0.025, 0.3 + j * 0.025);
-          const pts = Array.from({ length: 101 }, (_, k) => {
-            const a = (k / 100) * TAU,
-              r = (14 + j * 6.3) * (1 + 0.023 * Math.sin(a * 5 + j));
-            return [500 + Math.cos(a) * r, 280 + Math.sin(a) * r];
-          });
-          curve(pts, j % 4 ? C.gold : C.cream, 1.2, 0.25 * core, f);
-        }
-        heart(500, 280, 21, C.pink, together);
-        label("Год за годом — рядом", 500, 510, 22, C.gold, together);
+        disk(500,280,175,'#8b6e60');const u=q(.04,.90),total=24,active=Math.min(total-1,Math.floor(u*total));for(let j=0;j<=active;j++){const f=j<active?1:clamp(u*total-j),r=14+j*6.3;curve(Array.from({length:101},(_,k)=>{const a=k/100*TAU;return[500+Math.cos(a)*r,280+Math.sin(a)*r]}),C.gold,1.5,.6,f);}const r=14+active*6.3,a=(u*total-active)*TAU,x=500+Math.cos(a)*r,y=280+Math.sin(a)*r;line(x,y,x+26,y-38,C.cream,4);palm(x+26,y-38);label('Гравируем историю — линия следует за резцом',500,520,22,C.gold,1);
         break;
       }
       case "stations": {
-        const first = q(0, 0.33),
+        const first = 1,
           travel = q(0.33, 0.8),
           future = q(0.8, 1);
         line(140, 370, 850, 370, C.blue, 3, first);
         for (let j = 0; j < 5; j++) {
           const x = 180 + j * 150;
-          disk(x, 370, 8, C.gold, q(0.05 + j * 0.13, 0.2 + j * 0.13));
-          line(x, 370, x, 280, C.gold, 2, q(0.05 + j * 0.13, 0.2 + j * 0.13));
+          disk(x, 370, 8, C.gold, 1);
+          line(x, 370, x, 280, C.gold, 2, 1);
           rect(
             x - 34,
             238,
             68,
             35,
             C.purple,
-            q(0.05 + j * 0.13, 0.2 + j * 0.13),
+            1,
           );
           label(
             j === 0 ? "Встреча" : j === 4 ? "Впереди" : String(j),
@@ -2209,14 +1840,15 @@
             260,
             13,
             C.cream,
-            q(0.05 + j * 0.13, 0.2 + j * 0.13),
+            1,
           );
         }
         const x = 180 + 600 * travel;
         rect(x - 25, 330, 50, 27, C.pink, first);
-        disk(x - 15, 360, 6, C.ink, first);
-        disk(x + 15, 360, 6, C.ink, first);
+        disk(x - 15, 364, 6, C.ink, first);
+        disk(x + 15, 364, 6, C.ink, first);
         rect(x - 16, 337, 12, 10, C.gold, first);
+        for(const wx of [x-15,x+15])line(wx,364,wx+Math.cos(travel*100)*5,364+Math.sin(travel*100)*5,C.cream,1);
         curve(
           [
             [780, 370],
@@ -2230,45 +1862,14 @@
         break;
       }
       case "teatogether": {
-        const one = q(0, 0.33),
-          two = q(0.33, 0.7),
-          steam = q(0.7, 1);
-        ellipse(500, 440, 250, 28, "#665063", 0.4);
-        for (let j = 0; j < 2; j++) {
-          const x = 420 + j * 170,
-            k = j ? two : one;
-          rect(x - 44, 350, 88, 70, j ? C.blue : C.pink, k);
-          ellipse(x, 350, 44, 13, C.cream, k);
-          ellipse(x, 353, 35, 8, "#6b4e42", k);
-          arc(
-            x + 43,
-            382,
-            24,
-            -Math.PI / 2,
-            Math.PI / 2,
-            j ? C.blue : C.pink,
-            8,
-            k,
-          );
-          for (let a = 0; a < 3; a++)
-            curve(
-              Array.from({ length: 35 }, (_, i) => [
-                x + (a - 1) * 15 + Math.sin(i * 0.15 + clock * 0.4) * 8,
-                340 - i * 3,
-              ]),
-              C.cream,
-              2,
-              0.15 * k,
-            );
-        }
-        heart(505, 220, 28, C.pink, steam * 0.55);
+        ellipse(500,440,300,28,'#665063',.7);for(let j=0;j<2;j++){const u=q(.06+j*.3,.30+j*.3),target=420+j*170,x=target+(j?350:-350)*(1-u),y=350-45*Math.sin(Math.PI*u);rect(x-44,y,88,70,j?C.blue:C.pink);ellipse(x,y,44,13,C.cream);ellipse(x,y+3,35,8,'#6b4e42');arc(x+43,y+32,24,-Math.PI/2,Math.PI/2,j?C.blue:C.pink,8);if(u<1)palm(x+65,y+43);for(let a=0;a<3;a++)curve(Array.from({length:35},(_,i)=>[x+(a-1)*15+Math.sin(i*.15+clock)*8,y-10-i*3]),C.cream,2,.16);}label('Приносим две чашки к одному столу',500,520,22,C.cream,1);
         break;
       }
       case "shadowtheatre": {
         const curtain = q(0, 0.33),
           light = q(0.33, 0.68),
           play = q(0.68, 1);
-        rect(230, 125, 540, 300, "#d9b790", curtain * 0.8);
+        rect(230, 125, 540, 300, "#d9b790", 0.8);
         for (let side = 0; side < 2; side++) {
           const x = side ? 770 : 150;
           rect(x + (side ? -60 : 0) * (1 - curtain), 100, 80, 370, "#783c60");
@@ -2320,15 +1921,16 @@
             y + 55,
             "#49334d",
             2,
-            play,
+            1,
           );
         }
+        line(660,190,660,100,C.ink,1);
         disk(660, 190, 28, "#49334d", play);
         break;
       }
       case "hauntedmoon": {
         const aim = q(0, 0.34),
-          moon = q(0.34, 0.7),
+          moon = 1,
           magic = q(0.7, 1);
         disk(625, 205, 105, C.cream, moon * 0.9);
         disk(596, 192, 98, "#24233f", moon * 0.9);
@@ -2339,7 +1941,7 @@
             205 + Math.sin(a) * 80,
             8,
             C.purple,
-            magic,
+            1,
           );
         }
         g.save();
@@ -2357,7 +1959,7 @@
             110 + s.dots[j].r * 210,
             3,
             C.gold,
-            magic,
+            1,
           );
         break;
       }
@@ -2366,7 +1968,7 @@
           brew = q(0.33, 0.7),
           spirits = q(0.7, 1);
         ellipse(500, 399, 95, 70, "#343e55");
-        ellipse(500, 350, 95, 22, C.green, brew);
+        ellipse(500,350,95,22,C.green,1);line(420,482,580,482,C.gold,7);
         arc(500, 390, 113, 0, Math.PI, C.purple, 3);
         line(435, 448, 420, 478, C.gold, 5);
         line(565, 448, 580, 478, C.gold, 5);
@@ -2382,8 +1984,8 @@
           );
         }
         for (let j = 0; j < 5; j++) {
-          const x = 340 + j * 80,
-            y = 250 - spirits * 60 + Math.sin(clock + j) * 10;
+          const x = 500+(j-2)*80*spirits,
+            y = 330-140*spirits+Math.sin(clock+j)*10*spirits;
           g.save();
           g.globalAlpha = spirits * 0.7;
           g.fillStyle = j % 2 ? C.purple : C.cream;
@@ -2401,49 +2003,7 @@
         break;
       }
       case "weddingpath": {
-        const paths = q(0, 0.33),
-          meet = q(0.33, 0.7),
-          garden = q(0.7, 1);
-        curve(
-          [
-            [150, 454],
-            [280, 438],
-            [420, 365],
-            [500, 350],
-          ],
-          C.pink,
-          3,
-          0.7,
-          paths,
-        );
-        curve(
-          [
-            [850, 454],
-            [720, 438],
-            [580, 365],
-            [500, 350],
-          ],
-          C.blue,
-          3,
-          0.7,
-          paths,
-        );
-        arc(500, 285, 100, Math.PI, TAU, C.gold, 5, meet);
-        line(400, 285, 400, 430, C.gold, 5, meet);
-        line(600, 285, 600, 430, C.gold, 5, meet);
-        for (let j = 0; j < 16; j++) {
-          const a = Math.PI + (j * Math.PI) / 15;
-          flower(
-            500 + Math.cos(a) * 100,
-            285 + Math.sin(a) * 100,
-            13,
-            j % 2 ? C.pink : C.cream,
-            garden,
-          );
-        }
-        for (let j = 0; j < 12; j++)
-          flower(320 + j * 33, 455, 10, C.pink, garden);
-        heart(500, 325, 25, C.pink, garden);
+        for(const dir of [-1,1])curve([[500+dir*350,455],[500+dir*180,430],[500+dir*70,365]],dir<0?C.pink:C.blue,3,.7);arc(500,285,100,Math.PI,TAU,C.gold,5);line(400,285,400,430,C.gold,5);line(600,285,600,430,C.gold,5);for(let j=0;j<16;j++){const a=Math.PI+j*Math.PI/15;flower(500+Math.cos(a)*100,285+Math.sin(a)*100,13,j%2?C.pink:C.cream,1);}const u=q(.05,.85);walker(180+295*u,455-25*u,C.pink,u*25,u>.85?[500,395]:null);walker(820-295*u,455-25*u,C.blue,-u*25,u>.85?[500,395]:null);label('Идём навстречу и берёмся за руки',500,530,22,C.cream,1);
         break;
       }
       case "ringwaltz": {
@@ -2469,6 +2029,7 @@
           g.stroke();
           g.restore();
         }
+        for(const dir of [-1,1])palm(500+dir*(160-95*join),378+dir*Math.sin(dance*Math.PI)*60);
         glow(500, 275, 140, C.gold, 0.14 * join);
         for (let j = 0; j < 20; j++)
           star(
@@ -2502,13 +2063,15 @@
             [100, 461],
           ],
           "#5f4d57",
-          1 - launch,
+          1,
         );
         const x = 300 + 350 * launch,
-          y = 430 - 125 * horizon;
+          y = 430 - 85 * horizon+Math.sin(clock*1.2)*3;
+        line(275,420,300+350*launch,430-85*horizon,C.cream,1,Math.max(0,1-launch*8));
         boat(x, y, 1 - horizon * 0.45);
         g.save();
         g.translate(x, y);
+        g.scale(1-horizon*.45,1-horizon*.45);
         poly(
           [
             [-6, -80],
@@ -2516,7 +2079,7 @@
             [-61, -7],
           ],
           C.pink,
-          wind,
+          1,
         );
         g.restore();
         disk(740, 180, 40, C.gold, horizon * 0.6);
@@ -2533,12 +2096,13 @@
         break;
       }
       case "paperplane": {
-        const fold = q(0, 0.33),
+        const fold = 1,
           flight = q(0.33, 0.75),
           beyond = q(0.75, 1);
-        rect(210, 416, 290, 13, C.gold, 1 - flight);
-        line(240, 429, 240, 481, C.gold, 4, 1 - flight);
-        line(470, 429, 470, 481, C.gold, 4, 1 - flight);
+        rect(210, 416, 290, 13, C.gold, 1);
+        line(240, 429, 240, 481, C.gold, 4, 1);
+        line(470, 429, 470, 481, C.gold, 4, 1);
+        palm(330-190*q(.34,.55),390+100*q(.34,.55));
         const x = 330 + 430 * flight,
           y = 365 - 230 * flight;
         g.save();
@@ -2583,82 +2147,20 @@
             42,
             45 + (j % 4) * 12,
             "#26354b",
-            beyond,
+            1,
           );
         break;
       }
       case "bookstairs": {
-        const step = q(0, 0.33),
-          climb = q(0.33, 0.77),
-          door = q(0.77, 1);
-        for (let j = 0; j < 8; j++) {
-          const f = q(0.05 + j * 0.075, 0.25 + j * 0.075),
-            x = 220 + j * 66,
-            y = 450 - j * 32;
-          rect(x, y, 100, 22, j % 2 ? C.purple : C.blue, f);
-          rect(x + 6, y + 5, 88, 12, C.cream, f);
-          line(x + 8, y + 9, x + 86, y + 9, "#a59cba", 1, f);
-        }
-        const x = 235 + 455 * climb,
-          y = 437 - 224 * climb;
-        star(x, y, 9, C.gold, step);
-        rect(738, 120, 68, 98, C.gold, door);
-        rect(748, 128, 48, 90, C.cream, door);
-        glow(771, 166, 100, C.gold, 0.3 * door);
-        for (let j = 0; j < 6; j++)
-          ellipse(620 + j * 34, 470, 70, 18, C.cream, 0.05 * door);
+        const u=q(.08,.90);for(let j=0;j<8;j++){const x=220+j*66,y=450-j*32;rect(x,y,100,22,j%2?C.purple:C.blue);rect(x+6,y+5,88,12,C.cream);for(const xx of [x+8,x+90])line(xx,y+22,xx,486,C.gold,2,.3);}const step=Math.min(6,Math.floor(u*7)),f=u===1?1:u*7-step,x=250+(step+f)*66,y=450-step*32-32*f-40*Math.sin(Math.PI*f);walker(x,y,C.gold,f*Math.PI);rect(738,120,68,98,C.gold,.5);label('Шаг, перенос веса, следующая ступень',500,525,22,C.cream,1);
         break;
       }
       case "capsky": {
-        const ceremony = q(0, 0.33),
-          toss = q(0.33, 0.74),
-          future = q(0.74, 1);
-        for (let j = 0; j < 14; j++) {
-          const d = s.dots[j],
-            x = 180 + j * 47,
-            y = 410 - toss * (190 + d.s * 70) + toss * toss * 60;
-          g.save();
-          g.translate(x, y);
-          g.rotate(Math.sin(clock * 0.5 + j) * 0.15 * toss);
-          poly(
-            [
-              [-28, 0],
-              [0, -14],
-              [28, 0],
-              [0, 14],
-            ],
-            j % 2 ? C.purple : C.blue,
-            ceremony,
-          );
-          rect(-17, 7, 34, 14, C.ink, ceremony);
-          line(22, 2, 28, 26, C.gold, 1, ceremony);
-          disk(28, 27, 3, C.gold, ceremony);
-          g.restore();
-        }
-        curve(
-          [
-            [200, 160],
-            [360, 115],
-            [530, 156],
-            [730, 97],
-            [850, 144],
-          ],
-          C.gold,
-          1.5,
-          future,
-        );
-        for (const [x, y] of [
-          [200, 160],
-          [360, 115],
-          [530, 156],
-          [730, 97],
-          [850, 144],
-        ])
-          star(x, y, 5, C.gold, future);
+        const u=q(.18,.82);for(let j=0;j<10;j++){const x=190+j*67,ground=465;walker(x,ground,j%2?C.blue:C.purple,0,[x+18,ground-75-12*Math.sin(Math.PI*u)]);const y=ground-91-220*4*u*(1-u);g.save();g.translate(x,y);g.rotate(Math.sin(Math.PI*u)*.4*(j%2?1:-1));poly([[-25,0],[0,-13],[25,0],[0,13]],j%2?C.purple:C.blue);rect(-16,6,32,12,C.ink);line(20,2,26,25,C.gold,1);g.restore();}label('Бросок — подъём — вершина — возвращение',500,525,21,C.cream,1);
         break;
       }
       case "homelights": {
-        const home = q(0, 0.33),
+        const home = 1,
           lights = q(0.33, 0.74),
           cozy = q(0.74, 1);
         rect(340, 236, 320, 215, "#3b4055", home);
@@ -2680,6 +2182,7 @@
           line(x + 23, y, x + 23, y + 40, C.cream, 2, k);
           glow(x + 23, y + 20, 40, C.gold, k * 0.1);
         }
+        walker(150+340*q(0,.33),451,C.blue,clock*4);
         rect(610, 145, 25, 67, C.pink, home);
         for (let j = 0; j < 7; j++)
           ellipse(
@@ -2690,97 +2193,41 @@
             C.cream,
             0.04 * cozy,
           );
-        flower(315, 415, 13, C.pink, cozy);
-        flower(698, 415, 13, C.pink, cozy);
+        flower(315,415,13,C.pink,1);
+        flower(698,415,13,C.pink,1);
         break;
       }
       case "keydoor": {
-        const keyOn = q(0, 0.33),
-          turn = q(0.33, 0.7),
-          open = q(0.7, 1);
-        rect(420, 150, 170, 300, C.gold, 0.55);
-        rect(432, 161, 145 * (1 - open * 0.9), 285, "#574964");
-        disk(555 - open * 110, 306, 7, C.gold);
-        g.save();
-        g.translate(340 + 185 * keyOn, 310);
-        g.rotate((turn * Math.PI) / 2);
-        arc(-45, 0, 23, 0, TAU, C.gold, 7, 1 - open);
-        line(-20, 0, 45, 0, C.gold, 8, 1 - open);
-        line(25, 0, 25, 18, C.gold, 8, 1 - open);
-        line(43, 0, 43, 18, C.gold, 8, 1 - open);
-        g.restore();
-        glow(520, 300, 130, C.gold, 0.14 * open);
-        for (let j = 0; j < 7; j++)
-          flower(455 + j * 17, 375 + (j % 2) * 22, 9, C.pink, open);
-        disk(520, 210, 23, C.gold, open * 0.7);
+        const insert=q(.06,.32),turn=q(.34,.48),withdraw=q(.49,.6),open=q(.62,.94);rect(410,140,190,310,C.gold,.4);rect(425,150,160,295,'#d9b790');const angle=open*Math.PI*.43,w=150*Math.cos(angle);rect(430,150,w,295,'#574964');line(430,150,430,445,C.gold,4);const lockX=430+w*.82;disk(lockX,306,6,C.gold);const x=300+238*insert-150*withdraw,y=306;g.save();g.translate(x,y);g.scale(1,.3+.7*Math.abs(Math.cos(turn*Math.PI)));arc(-38,0,20,0,TAU,C.gold,6);line(-18,0,15,0,C.gold,7);line(7,0,7,13,C.gold,5);g.restore();palm(x-54,y+15);if(open>0)palm(lockX,312);label('Вставляем ключ → поворачиваем → вынимаем → открываем дверь',500,530,18,C.cream,1);
         break;
       }
       case "furnish": {
-        const boxes = q(0, 0.33),
-          arrange = q(0.33, 0.74),
-          lamp = q(0.74, 1);
-        line(220, 437, 805, 437, C.cream, 2, 0.3);
-        rect(215, 370, 70, 67, C.gold, boxes * (1 - arrange));
-        line(250, 370, 250, 437, C.ink, 2, boxes * (1 - arrange));
-        rect(350, 351 + 80 * (1 - arrange), 250, 74, C.purple, arrange);
-        rect(330, 349, 35, 80, C.pink, arrange);
-        rect(586, 349, 35, 80, C.pink, arrange);
-        rect(365, 330, 98, 49, C.blue, arrange);
-        rect(482, 330, 98, 49, C.blue, arrange);
-        line(702, 440, 702, 220, C.gold, 4, arrange);
-        poly(
-          [
-            [663, 224],
-            [679, 170],
-            [724, 170],
-            [742, 224],
-          ],
-          C.gold,
-          arrange,
-        );
-        poly(
-          [
-            [663, 224],
-            [742, 224],
-            [800, 435],
-            [610, 435],
-          ],
-          C.gold,
-          0.08 * lamp,
-        );
-        glow(700, 235, 95, C.gold, 0.2 * lamp);
-        rect(257, 194, 85, 103, C.cream, arrange);
-        flower(298, 245, 15, C.pink, arrange);
+        const push=q(.08,.55),light=q(.62,.78);line(100,440,900,440,C.cream,2,.4);rect(257,194,85,103,C.cream);flower(298,245,15,C.pink,1);
+        const dx=-390*(1-push);g.save();g.translate(dx,0);rect(350,351,250,74,C.purple);rect(330,349,35,80,C.pink);rect(586,349,35,80,C.pink);rect(365,330,98,49,C.blue);rect(482,330,98,49,C.blue);for(const x of [365,587]){disk(x,433,7,C.ink);line(x,433,x+Math.cos(push*390/7)*5,433+Math.sin(push*390/7)*5,C.gold,2);}g.restore();walker(300+dx,440,C.blue,push*35,[330+dx,379]);
+        line(702,440,702,220,C.gold,4);poly([[663,224],[679,170],[724,170],[742,224]],C.gold);line(702,430,770,430,C.cream,2);disk(770,430,8,C.pink);poly([[663,224],[742,224],[800,435],[610,435]],C.gold,.12*light);glow(700,235,95,C.gold,.2*light);
+        if(p>.54)walker(640+110*q(.54,.7),440,C.pink,clock*3,[770,425]);
         break;
       }
       case "gears": {
-        const first = q(0, 0.33),
-          drive = q(0.33, 0.74),
-          result = q(0.74, 1);
-        for (let j = 0; j < 3; j++) {
-          const x = 325 + j * 140,
-            y = 340 - (j % 2) * 70,
-            r = j === 1 ? 57 : 70;
-          g.save();
-          g.translate(x, y);
-          g.rotate(clock * 0.3 * (j % 2 ? -1 : 1) * drive + drive * 3);
-          for (let k = 0; k < 16; k++) {
-            const a = (k * TAU) / 16;
-            g.save();
-            g.rotate(a);
-            rect(r - 8, -8, 22, 16, j % 2 ? C.blue : C.gold, first);
-            g.restore();
+        const first = 1,drive=q(.33,.74),result=q(.74,1);
+        const dx=Math.sqrt(126*126-60*60),alpha=Math.atan2(-60,dx),beta=-alpha;
+        const rot0=(clock*.3+3)*drive,
+          rot1=alpha+Math.PI-Math.PI/16+20/16*alpha-20/16*rot0,
+          rot2=beta+Math.PI-Math.PI/20+16/20*beta-16/20*rot1;
+        for(let j=0;j<3;j++){
+          const x=340+j*dx,y=340-(j%2)*60,r=j===1?56:70,teeth=j===1?16:20;
+          g.save();g.translate(x,y);g.rotate([rot0,rot1,rot2][j]);
+          for(let k=0;k<teeth;k++){
+            const a=k*TAU/teeth,d=TAU/teeth;
+            poly([[r-5,a-d*.31],[r+4,a-d*.19],[r+4,a+d*.19],[r-5,a+d*.31]].map(([R,A])=>[Math.cos(A)*R,Math.sin(A)*R]),j%2?C.blue:C.gold,first);
           }
-          arc(0, 0, r - 4, 0, TAU, j % 2 ? C.blue : C.gold, 14, first);
-          disk(0, 0, 14, C.cream, first);
-          line(-r * 0.55, 0, r * 0.55, 0, C.cream, 3, first);
-          line(0, -r * 0.55, 0, r * 0.55, C.cream, 3, first);
-          g.restore();
+          arc(0,0,r-9,0,TAU,j%2?C.blue:C.gold,10,first);
+          disk(0,0,14,C.cream,first);line(-r*.55,0,r*.55,0,C.cream,3,first);line(0,-r*.55,0,r*.55,C.cream,3,first);g.restore();
         }
-        line(620, 340, 670, 340, C.gold, 4, drive);
-        line(670, 340, 670, 340 - 155 * result, C.gold, 4, drive);
-        star(670, 340 - 155 * result, 28, C.gold, drive);
-        glow(670, 185, 80, C.gold, 0.2 * result);
+        rect(280,395,60,45,C.purple);line(310,395,340,340,C.gold,5);arc(310,415,10,0,TAU,C.gold,2);
+        line(340+2*dx,340,670,340,C.gold,4,drive);
+        line(670,340,670,340-155*result,C.gold,4,drive);
+        star(670,340-155*result,28,C.gold,drive);glow(670,185,80,C.gold,.2*result);
         break;
       }
       case "mountain": {
@@ -2799,9 +2246,9 @@
         curve(pts, C.gold, 2, 0.7, climb);
         const k = Math.min(89, Math.floor(climb * 89));
         glow(...pts[k], 24, C.gold, 0.4 * see);
-        disk(...pts[k], 5, C.gold, see);
+        walker(pts[k][0],pts[k][1]+4,C.gold,climb*38);
         disk(690, 160, 47, C.gold, sun * 0.7);
-        line(500, 164, 500, 128, C.cream, 2, sun);
+        line(500, 164, 500, 128, C.cream, 2, 1);
         poly(
           [
             [500, 128],
@@ -2809,17 +2256,17 @@
             [500, 146],
           ],
           C.pink,
-          sun,
+          1,
         );
         break;
       }
       case "rocket": {
-        const ready = q(0, 0.33),
+        const ready = 1,
           launch = q(0.33, 0.74),
           orbit = q(0.74, 1);
         const x = 500 + 180 * orbit,
-          y = 415 - 215 * launch;
-        line(470, 445, 530, 445, C.blue, 5, 1 - launch);
+          y = 415 - 215 * launch*launch;
+        line(470, 445, 530, 445, C.blue, 5, 1);
         g.save();
         g.translate(x, y);
         g.rotate(orbit * 0.7);
@@ -2862,8 +2309,8 @@
           C.gold,
           launch * (1 - orbit),
         );
-        rect(-22 - 75 * orbit, -36, 75 * orbit, 26, C.blue, orbit);
-        rect(22, -36, 75 * orbit, 26, C.blue, orbit);
+        rect(-22 - 75 * Math.sin(orbit*Math.PI/2), -36, Math.max(2,75*Math.sin(orbit*Math.PI/2)),26,C.blue);
+        rect(22,-36,Math.max(2,75*Math.sin(orbit*Math.PI/2)),26,C.blue);
         g.restore();
         for (let j = 0; j < 10; j++)
           ellipse(
@@ -2879,7 +2326,7 @@
         break;
       }
       case "rainclears": {
-        const rain = q(0, 0.33),
+        const rain = 1,
           less = q(0.33, 0.72),
           sun = q(0.72, 1);
         for (let j = 0; j < 60; j++) {
@@ -2890,7 +2337,7 @@
         }
         for (let j = 0; j < 8; j++)
           ellipse(
-            220 + j * 80,
+            220+j*80+less*680,
             140 + Math.sin(j) * 20,
             70,
             28,
@@ -2912,54 +2359,11 @@
         break;
       }
       case "warmhands": {
-        const hands = q(0, 0.33),
-          cup = q(0.33, 0.73),
-          warm = q(0.73, 1);
-        poly(
-          [
-            [225, 450],
-            [375, 364],
-            [420, 371],
-            [480, 415],
-            [460, 453],
-            [352, 439],
-            [264, 490],
-          ],
-          "#c79c94",
-          hands,
-        );
-        poly(
-          [
-            [775, 450],
-            [625, 364],
-            [580, 371],
-            [520, 415],
-            [540, 453],
-            [648, 439],
-            [736, 490],
-          ],
-          "#c79c94",
-          hands,
-        );
-        rect(450, 321, 100, 92, C.blue, cup);
-        ellipse(500, 321, 50, 14, C.cream, cup);
-        ellipse(500, 324, 40, 9, "#80604b", cup);
-        arc(551, 357, 26, -Math.PI / 2, Math.PI / 2, C.blue, 8, cup);
-        for (let j = 0; j < 3; j++)
-          curve(
-            Array.from({ length: 35 }, (_, k) => [
-              480 + j * 20 + Math.sin(k * 0.16 + clock * 0.3) * 8,
-              303 - k * 3,
-            ]),
-            C.cream,
-            2,
-            0.17 * warm,
-          );
-        glow(500, 350, 185, C.gold, 0.14 * warm);
+        const u=q(.08,.78),x=260+460*u,y=335-Math.sin(Math.PI*u)*12;line(140,450,400,450,C.gold,5);line(600,450,880,450,C.gold,5);rect(x-50,y,100,92,C.blue);ellipse(x,y,50,14,C.cream);ellipse(x,y+3,40,9,'#80604b');arc(x+51,y+36,26,-Math.PI/2,Math.PI/2,C.blue,8);const left=u<.5?x-40:490-220*q(.5,.8),right=u>.4?x+54:760;line(80,480,left,y+90,'#c79c94',16);palm(left,y+83,'#c79c94');line(920,480,right,y+90,'#c79c94',16);palm(right,y+83,'#c79c94',2.5);for(let j=0;j<3;j++)curve(Array.from({length:32},(_,i)=>[x-20+j*20+Math.sin(i*.17+clock)*7,y-18-i*3]),C.cream,2,.2);label('Передаём чашку: сначала принимаем вес, затем отпускаем',500,535,19,C.cream,1);
         break;
       }
       case "breathingsea": {
-        const calm = q(0, 0.33),
+        const calm = 1,
           breath = q(0.33, 0.72),
           sail = q(0.72, 1);
         const cycle = (1 - Math.cos(clock * 0.65)) / 2;
@@ -2977,193 +2381,35 @@
             0.14,
           );
         disk(710, 160, 33, C.cream, calm * 0.65);
-        boat(460 + 90 * sail, 370 + cycle * 4, 0.62, sail);
+        boat(-90+640*sail,370+cycle*4,.62,1);
         glow(500, 300, 130 + cycle * 50, C.blue, 0.05 * breath);
         label("В своём ритме", 500, 510, 22, C.cream, sail);
         break;
       }
       case "sunroom": {
-        const dawn = q(0, 0.33),
-          beam = q(0.33, 0.73),
-          day = q(0.73, 1);
-        rect(275, 145, 150, 205, C.blue, 0.12);
-        line(350, 145, 350, 350, C.cream, 3, 0.6);
-        line(275, 247, 425, 247, C.cream, 3, 0.6);
-        disk(390, 188, 25, C.gold, dawn);
-        poly(
-          [
-            [285, 200],
-            [415, 200],
-            [760, 447],
-            [410, 447],
-          ],
-          C.gold,
-          0.08 * beam,
-        );
-        rect(590, 371, 110, 10, C.gold, 0.7);
-        line(610, 381, 610, 450, C.gold, 3);
-        line(680, 381, 680, 450, C.gold, 3);
-        rect(628, 344, 35, 27, C.pink, day);
-        flower(646, 302, 20, C.pink, day);
-        ellipse(770, 425, 45, 20, C.cream, day * 0.7);
-        ellipse(799, 411, 20, 17, C.cream, day * 0.7);
-        poly(
-          [
-            [785, 400],
-            [787, 385],
-            [797, 398],
-          ],
-          C.cream,
-          day * 0.7,
-        );
-        poly(
-          [
-            [803, 397],
-            [814, 385],
-            [813, 405],
-          ],
-          C.cream,
-          day * 0.7,
-        );
-        arc(738, 415, 28, 2.4, 4.8, C.cream, 7, day * 0.7);
+        const dawn=q(.05,.8);rect(275,145,150,205,C.blue,.12);disk(390,320-130*dawn,25,C.gold);line(350,145,350,350,C.cream,3,.6);line(275,247,425,247,C.cream,3,.6);poly([[285,200],[415,200],[760,447],[410,447]],C.gold,.08*dawn);rect(590,371,110,10,C.gold,.7);line(610,381,610,450,C.gold,3);line(680,381,680,450,C.gold,3);rect(628,344,35,27,C.pink);plant(646,344,60,1);
+        const u=q(.12,.72),x=1070-300*u;ellipse(x,413,45,20,C.cream);ellipse(x-35,398,20,17,C.cream);poly([[x-49,389],[x-46,373],[x-36,387]],C.cream);poly([[x-30,386],[x-18,374],[x-19,395]],C.cream);for(const dx of [-26,24])line(x+dx,423,x+dx+Math.sin(u*30+dx)*8,445,C.cream,7);arc(x+37,400,28,-1.5,.8,C.cream,7);disk(x-43,397,2,C.ink);label('Солнце поднимается; кот приходит греться у окна',500,520,20,C.cream,1);
         break;
       }
       case "postcards": {
-        const mail = q(0, 0.33),
-          arrive = q(0.33, 0.72),
-          wall = q(0.72, 1);
-        line(180, 157, 820, 157, C.gold, 2, mail);
-        for (let j = 0; j < 5; j++) {
-          const a = q(0.08 + j * 0.07, 0.32 + j * 0.07),
-            x = 250 + j * 125,
-            y = 170 + 240 * (1 - a);
-          g.save();
-          g.translate(x, y);
-          g.rotate(Math.sin(j) * 0.12 * (1 - wall));
-          rect(-50, 0, 100, 100, "#e0d4ca", mail);
-          rect(-44, 7, 88, 61, j % 2 ? "#a2b5b5" : "#bcb0cf", mail);
-          if (j % 2) heart(0, 38, 16, C.pink, mail);
-          else {
-            disk(20, 25, 10, C.gold, mail);
-            mountain(-5, 60, 75, 33, "#76869c");
-          }
-          line(-35, 83, 35, 83, "#968794", 1, mail);
-          rect(-3, -8, 6, 16, C.gold, arrive);
-          g.restore();
-        }
-        label("Хорошее находит свой адрес", 500, 510, 22, C.cream, wall);
+        line(180,160,820,160,C.gold,2);const count=5;for(let j=0;j<count;j++){const u=q(.04+j*.15,.16+j*.15),x=240+j*125,y=420-250*u;g.save();g.translate(x,y);g.rotate(Math.sin(Math.PI*u)*.13);rect(-48,0,96,96,C.cream);rect(-42,7,84,59,j%2?C.blue:C.purple);if(j%2)heart(0,37,16,C.pink);else{disk(20,25,10,C.gold);mountain(-5,60,75,33,'#76869c');}line(-35,81,35,81,'#968794',1);rect(-3,-10,6,18,C.gold);g.restore();if(u>0&&u<1)palm(x,y+75,C.cream,-.3);}rect(120,516,760,9,C.gold,.4);label('Поднимаем открытки и закрепляем прищепками',500,556,20,C.cream,1);
         break;
       }
       case "jar": {
-        const catchLight = q(0, 0.33),
-          gather = q(0.33, 0.73),
-          cosmos = q(0.73, 1);
-        rect(394, 162, 212, 24, C.gold, 0.6);
-        curve(
-          [
-            [398, 190],
-            [380, 240],
-            [380, 413],
-            [395, 444],
-            [605, 444],
-            [620, 413],
-            [620, 240],
-            [602, 190],
-          ],
-          C.blue,
-          3,
-          0.5,
-        );
-        rect(385, 205, 230, 232, C.blue, 0.035);
-        for (let j = 0; j < 90; j++) {
-          const d = s.dots[j],
-            a = j * 2.4 + clock * 0.14,
-            k = q(0.15 + j * 0.005, 0.46 + j * 0.005),
-            r = 20 + 75 * d.r;
-          const x =
-              150 + d.s * 700 + (500 + Math.cos(a) * r - (150 + d.s * 700)) * k,
-            y =
-              100 + d.r * 400 + (315 + Math.sin(a) * r - (100 + d.r * 400)) * k;
-          disk(
-            x,
-            y,
-            1.5 + d.s * 1.5,
-            j % 2 ? C.gold : C.blue,
-            catchLight * (0.25 + 0.6 * gather),
-          );
-          if (j < 12) glow(x, y, 10, C.gold, 0.08 * gather);
-        }
-        arc(500, 315, 75, 0, TAU, C.purple, 1, cosmos * 0.4);
-        disk(500, 315, 14, C.blue, cosmos);
-        label("Маленькая вселенная — твоя", 500, 510, 22, C.cream, cosmos);
+        const close=q(.84,.98);curve([[398,190],[380,240],[380,413],[395,444],[605,444],[620,413],[620,240],[602,190]],C.blue,3,.6);rect(385,205,230,232,C.blue,.035);for(let j=0;j<32;j++){const u=q(.03+j*.012,.35+j*.012),v=clamp(u*2),w=clamp(u*2-1),sx=100+(j*97%800),sy=70+(j%4)*20,tx=450+(j*31%100),ty=265+(j*47%130);const x=u<.5?sx+(500-sx)*v:500+(tx-500)*w,y=u<.5?sy+(178-sy)*v:178+(ty-178)*w;disk(x+Math.sin(clock*2+j)*2,y,2.5,C.gold);ellipse(x,y-4,4,2,C.cream,.5,Math.sin(clock*15+j));}rect(394,95+67*close,212,24,C.gold);if(close<1)palm(600,108+67*close);label('Светлячки залетают через горлышко; крышка опускается последней',500,520,18,C.cream,1);
         break;
       }
       case "bridge": {
-        const banks = q(0, 0.33),
-          build = q(0.33, 0.73),
-          meet = q(0.73, 1);
-        poly(
-          [
-            [100, 360],
-            [350, 368],
-            [390, 468],
-            [100, 480],
-          ],
-          "#44605b",
-          banks,
-        );
-        poly(
-          [
-            [650, 368],
-            [900, 360],
-            [900, 480],
-            [610, 468],
-          ],
-          "#44605b",
-          banks,
-        );
-        for (let j = 0; j < 7; j++)
-          curve(
-            Array.from({ length: 35 }, (_, i) => [
-              380 + i * 7,
-              390 + j * 13 + Math.sin(i * 0.4 + clock * 0.4) * 2,
-            ]),
-            C.blue,
-            1,
-            0.2,
-          );
-        for (let side = 0; side < 2; side++) {
-          const dir = side ? -1 : 1;
-          line(
-            side ? 650 : 350,
-            367,
-            (side ? 650 : 350) + dir * 150 * build,
-            367,
-            C.gold,
-            5,
-            banks,
-          );
-          for (let j = 0; j < 6; j++) {
-            const x = (side ? 650 : 350) + dir * j * 25;
-            line(x, 367, x, 335, C.gold, 2, build);
-          }
-          line(
-            side ? 650 : 350,
-            335,
-            (side ? 650 : 350) + dir * 150 * build,
-            335,
-            C.gold,
-            2,
-            build,
-          );
-        }
-        star(350 + 150 * meet, 315, 10, C.pink, banks);
-        star(650 - 150 * meet, 315, 10, C.blue, banks);
-        glow(500, 315, 65, C.gold, 0.15 * meet);
+        const lower=q(.08,.55),meet=q(.58,.92);
+        for(const side of [0,1])poly(side?[[650,370],[900,370],[900,490],[610,490]]:[[100,370],[350,370],[390,490],[100,490]],'#44605b');
+        for(let j=0;j<6;j++)curve(Array.from({length:40},(_,i)=>[370+i*7,410+j*12+Math.sin(i*.3-clock)*3]),C.blue,1,.3);
+        for(const dir of [-1,1]){const pivot=dir<0?350:650,angle=dir<0?-Math.PI/2*(1-lower):Math.PI/2*(1-lower);g.save();g.translate(pivot,370);g.rotate(angle);const reach=-dir*150;line(0,0,reach,0,C.gold,8);line(0,-35,reach,-35,C.gold,3);for(let j=0;j<7;j++)line(-dir*j*25,0,-dir*j*25,-35,C.gold,2);g.restore();disk(pivot,370,8,C.cream);line(pivot,370,pivot,300,C.gold,5);const ex=pivot+Math.cos(angle)*-dir*150,ey=370+Math.sin(angle)*-dir*150;line(pivot,300,ex,ey,C.cream,2);arc(pivot,345,12,0,TAU,C.gold,3);line(pivot,345,pivot+Math.cos(lower*TAU*2)*12,345+Math.sin(lower*TAU*2)*12,C.cream,3);}
+        walker(260+215*meet,370,C.pink,meet*22);walker(740-215*meet,370,C.blue,-meet*22);
+        label('Опускаем пролёты на шарнирах — встречаемся посередине',500,525,19,C.cream,1);
         break;
       }
       case "rooftop": {
-        const night = q(0, 0.33),
+        const night = 1,
           talk = q(0.33, 0.73),
           dawn = q(0.73, 1);
         skyline(456, "#293246");
@@ -3178,172 +2424,45 @@
           arc(x, y, 9, 0, TAU, C.blue, 1.5, a * (1 - dawn) * 0.65);
         }
         disk(525, 168, 37, C.gold, dawn * 0.65);
+        walker(390,330,C.pink,0,[430,280+Math.sin(clock)*5]);walker(610,330,C.blue,0,[570,280-Math.sin(clock)*5]);
         label("Есть с кем встретить утро", 500, 520, 22, C.cream, dawn);
         break;
       }
       case "music": {
-        const first = q(0, 0.33),
-          duet = q(0.33, 0.73),
-          song = q(0.73, 1);
-        for (let j = 0; j < 5; j++)
-          line(220, 210 + j * 22, 780, 210 + j * 22, C.cream, 1, 0.18);
-        ellipse(295, 382, 38, 53, C.gold, first);
-        ellipse(295, 329, 29, 35, C.gold, first);
-        rect(288, 180, 14, 147, C.gold, first);
-        disk(295, 342, 12, C.ink, first);
-        for (let j = 0; j < 4; j++)
-          line(291 + j * 3, 190, 291 + j * 3, 410, C.cream, 1, first * 0.5);
-        rect(640, 306, 115, 84, C.purple, duet);
-        for (let j = 0; j < 8; j++) {
-          rect(648 + j * 12, 358, 11, 30, C.cream, duet);
-          if (j % 3 !== 1) rect(655 + j * 12, 358, 7, 17, C.ink, duet);
-        }
-        for (let j = 0; j < 14; j++) {
-          const x = 340 + j * 25,
-            y = 270 + Math.sin(j * 0.7 - clock * 0.4) * 36,
-            k = q(0.4 + j * 0.015, 0.63 + j * 0.015);
-          ellipse(x, y, 7, 5, j % 2 ? C.pink : C.blue, k);
-          line(x + 6, y, x + 6, y - 27, j % 2 ? C.pink : C.blue, 2, k);
-        }
-        curve(
-          Array.from({ length: 100 }, (_, i) => [
-            220 + i * 5.6,
-            455 + Math.sin(i * 0.22 - clock) * song * 18,
-          ]),
-          C.gold,
-          2,
-          0.55 * song,
-        );
+        for(let j=0;j<5;j++)line(220,190+j*22,780,190+j*22,C.cream,1,.18);ellipse(295,382,38,53,C.gold);ellipse(295,329,29,35,C.gold);rect(288,180,14,147,C.gold);disk(295,342,12,C.ink);for(let j=0;j<4;j++)curve([[291+j*3,190],[291+j*3+Math.sin(clock*24+j)*2,340],[291+j*3,410]],C.cream,1,.8);palm(306+Math.sin(clock*5)*12,365);rect(640,306,115,84,C.purple);for(let j=0;j<8;j++){const down=(Math.floor(clock*3)%8===j);rect(648+j*12,358+(down?5:0),11,30-(down?5:0),C.cream);}palm(655+(Math.floor(clock*3)%8)*12,355);for(let j=0;j<12;j++){const u=(clock*.2+j/12)%1,side=j%2,x=(side?690:305)+(500-(side?690:305))*u,y=340-u*170;ellipse(x,y,7,5,side?C.blue:C.pink,1-u);line(x+6,y,x+6,y-25,side?C.blue:C.pink,2,1-u);}label('Струны и клавиши двигаются в ритме',500,520,22,C.cream,1);
         break;
       }
       case "terrarium": {
-        const glass = q(0, 0.33),
-          life = q(0.33, 0.73),
-          world = q(0.73, 1);
-        poly(
-          [
-            [280, 436],
-            [240, 238],
-            [420, 111],
-            [620, 111],
-            [760, 238],
-            [720, 436],
-          ],
-          C.blue,
-          0.05 * glass,
-        );
-        curve(
-          [
-            [280, 436],
-            [240, 238],
-            [420, 111],
-            [620, 111],
-            [760, 238],
-            [720, 436],
-            [280, 436],
-          ],
-          C.blue,
-          2,
-          0.6 * glass,
-        );
-        line(420, 111, 500, 436, C.blue, 1, 0.2 * glass);
-        line(620, 111, 500, 436, C.blue, 1, 0.2 * glass);
-        poly(
-          [
-            [280, 390],
-            [440, 370],
-            [600, 383],
-            [720, 370],
-            [720, 436],
-            [280, 436],
-          ],
-          "#5f8170",
-          life,
-        );
-        for (let j = 0; j < 6; j++)
-          flower(325 + j * 65, 355 - (j % 3) * 21, 14, C.pink, life);
-        ellipse(535, 412, 90, 12, C.blue, 0.5 * world);
-        for (let j = 0; j < 14; j++)
-          disk(
-            330 + s.dots[j].s * 340,
-            200 + s.dots[j].r * 170,
-            2,
-            C.gold,
-            world,
-          );
+        const water=q(.04,.23),grow=q(.27,.83);curve([[200,450],[180,210],[370,95],[650,95],[820,210],[800,450],[200,450]],C.blue,3,.7);
+        ellipse(500,465,340,20,'#795f4e');for(let j=0;j<6;j++){const x=240+j*105,h=(40+65*grow),ground=455;ellipse(x,453,8,4,C.gold);pine(x,ground,20+75*grow,j%2?C.green:C.blue);ellipse(x,460,34,6,C.green,.7);}
+        const canX=190+520*water;watering(canX,370,p<.27?1:0);palm(canX-10,352);disk(760,115,30,C.gold,.9);
+        for(let j=0;j<5;j++){const u=clamp((p-.84)*6+j*.035),x=-50+1000*u,y=230+Math.sin(u*TAU*2+j)*25;if(p>.84){ellipse(x,y,8,5,C.gold);ellipse(x,y-7,7,3,C.cream,.7,Math.sin(clock*18));}}
+        label('Поливаем почву → побег из семени → раскрытие листьев · ускоренное время',500,535,17,C.cream,1);
         break;
       }
       case "camera": {
-        const lens = q(0, 0.33),
-          snap = q(0.33, 0.73),
-          photo = q(0.73, 1);
-        const x = 380 - 90 * photo;
-        rect(x - 130, 235, 260, 145, "#4b4a65", lens);
-        rect(x - 93, 204, 77, 31, C.purple, lens);
-        disk(x, 303, 62, C.ink, lens);
-        arc(x, 303, 48, 0, TAU, C.blue, 6, lens);
-        arc(x, 303, 32, 0, TAU, C.purple, 4, lens);
-        disk(x + 80, 266, 11, C.gold, lens);
-        const flash = Math.sin(clamp((p - 0.42) / 0.2) * Math.PI) * snap;
-        glow(x + 83, 265, 100, C.cream, 0.24 * flash);
-        g.save();
-        g.translate(650, 290);
-        g.rotate(-0.08 * photo);
-        rect(-100, -110, 200, 250, C.cream, photo);
-        rect(-88, -98, 176, 185, "#839fa8", photo);
-        disk(45, -57, 20, C.gold, photo);
-        if (photo > 0) {
-          g.save();
-          g.globalAlpha = photo;
-          mountain(-15, 75, 170, 115, "#5b7b79");
-          g.restore();
-        }
-        label("Этот момент", 0, 121, 17, "#625b6e", photo);
-        g.restore();
+        const press=q(.10,.20),eject=q(.32,.74),develop=q(.55,.95),x=500;rect(x-130,150,260,145,'#4b4a65');rect(x-93,119,77,31,C.purple);disk(x,218,62,C.ink);arc(x,218,48,0,TAU,C.blue,6);arc(x,218,32,0,TAU,C.purple,4);disk(x+80,181,11,C.gold);rect(565,139+press*4,24,8,C.gold);palm(577,130+press*4);glow(580,181,100,C.cream,.35*Math.sin(q(.18,.28)*Math.PI));
+        g.save();g.beginPath();g.rect(390,295,220,230);g.clip();const y=65+230*eject;rect(400,y,200,220,C.cream);rect(412,y+12,176,163,'#829fa8',develop);disk(545,y+50,18,C.gold,develop);g.save();g.globalAlpha=develop;mountain(485,y+170,170,95,'#5b7b79');g.restore();g.restore();rect(389,285,222,10,C.ink);label('Нажатие → снимок выходит из щели → проявление',500,550,20,C.cream,1);
         break;
       }
       case "film": {
-        const reel = q(0, 0.33),
-          frames = q(0.33, 0.73),
-          more = q(0.73, 1);
-        disk(260, 280, 105, "#6e6a87", reel);
-        for (let j = 0; j < 5; j++) {
-          const a = (j * TAU) / 5 + clock * 0.08 * frames;
-          disk(260 + Math.cos(a) * 62, 280 + Math.sin(a) * 62, 24, C.ink, reel);
-        }
-        disk(260, 280, 12, C.gold, reel);
-        rect(365, 205, 470 * frames, 152, "#3d3d53", reel);
-        for (let j = 0; j < 4; j++) {
-          const x = 380 + j * 110,
-            k = q(0.33 + j * 0.07, 0.55 + j * 0.07);
-          rect(x, 229, 96, 105, j % 2 ? "#7b959c" : "#a78c9f", k);
-          for (let a = 0; a < 3; a++) {
-            rect(x + a * 33, 214, 8, 7, C.cream, k);
-            rect(x + a * 33, 340, 8, 7, C.cream, k);
-          }
-          if (j % 2) star(x + 47, 278, 19, C.gold, k);
-          else flower(x + 47, 265, 15, C.pink, k);
-        }
-        curve(
-          [
-            [835, 205],
-            [870, 190],
-            [905, 165],
-          ],
-          C.gold,
-          2,
-          more * 0.6,
-        );
-        label("У истории есть продолжение", 500, 510, 22, C.cream, more);
+        const length=520*q(.05,.85),radius=100;disk(240,280,radius,'#6e6a87');for(let j=0;j<5;j++){const a=j*TAU/5-length/radius;disk(240+Math.cos(a)*60,280+Math.sin(a)*60,23,C.ink);}disk(240,280,12,C.gold);g.save();g.beginPath();g.rect(340,202,length,152);g.clip();rect(340,202,540,152,'#3d3d53');for(let j=0;j<6;j++){const x=340+length-j*106;rect(x-96,224,90,107,j%2?C.blue:C.purple);for(let k=0;k<3;k++){rect(x-91+k*30,210,9,7,C.cream);rect(x-91+k*30,340,9,7,C.cream);}star(x-50,274,20,C.gold);}g.restore();palm(340+length,352);label('Тянем ленту: катушка вращается вслед за ней',500,515,22,C.cream,1);
         break;
       }
+
     }
     g.restore();
     g.globalAlpha = 1;
     // A thin progress track exposes the deliberate beginning/change/finale without covering the art.
-    const duration = topic === "memorial" ? 11 : 8;
+    const duration = 14;
     line(400, 565, 600, 565, C.cream, 1, 0.12);
     line(400, 565, 400 + 200 * clamp(t / duration), 565, C.gold, 2, 0.45);
   }
-  window.AnimationPacks = { names, options, select, info, draw, catalog };
+  function duration(id){
+ if(id==='pack:newyear:2:2')return SnowWorkshop.duration;
+ const [,topic,index,phase]=id.split(':');
+ if(phase==='2')return PaperWorkshop.duration({dots:Array.from({length:200},(_,j)=>({r:.3+(j*37%100)/150,s:(j*61%200)/200,z:.4})),name:''},topic,+index);
+ return 16;
+}
+  window.AnimationPacks = { names, options, select, info, draw, catalog, duration };
 })();
