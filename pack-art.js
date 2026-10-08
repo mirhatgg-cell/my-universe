@@ -763,7 +763,7 @@
           xx = x + Math.cos(a) * 35,
           zz = z + Math.sin(a) * 35,
           h = 50 + (j % 3) * 14;
-        segment([xx, y, zz], [xx, y + h, zz], 1.5, C.green);
+        segment([x+Math.cos(a)*10,y,z+Math.sin(a)*10],[xx,y+h,zz],1.5,C.green);
         for (let k = 0; k < 5; k++) {
           const b = (k * TAU) / 5, open=q(.12+j*.035,.6+j*.035);
           sphere(
@@ -884,9 +884,9 @@
         for (let j = 0; j < 30; j++) {
           const u = (j * TAU) / 30 + rot;
           star(
-            Math.cos(u) * 170,
+            Math.cos(u) * 230,
             15 + Math.sin(u) * 55,
-            Math.sin(u) * 90,
+            Math.sin(u) * 230,
             3,
             C.gold,
             0.8,
@@ -900,15 +900,15 @@
         for (const x of [-88, 88]) {
           box(x, -78, 40, 13, 144, 18, C.wood);
           torus(x, -4, 10, 25, 6, C.gold, 1, [Math.PI / 2, 0, 0]);
-          segment([x, -24, 10], [x, -118.5 + 80 * a, 10], 2, C.ivory);
+          const dir=Math.sign(x);segment([x-dir*25,-4,10],[x-dir*25,-118.5+80*a,10],2,C.ivory);for(let n=0;n<12;n++){const u=n*Math.PI/12,w=(n+1)*Math.PI/12;segment([x+25*Math.cos(u),-4+25*Math.sin(u),10],[x+25*Math.cos(w),-4+25*Math.sin(w),10],2,C.ivory);}
         }
         box(0, -126 + 80 * a, 10, 190, 15, 80, C.blue);
-        for(const x of [-88,88]){segment([x,21,10],[x+28,21,10],2,C.ivory);segment([x+28,21,10],[x+28,-35-80*a,10],2,C.ivory);box(x+28,-45-80*a,10,15,20,15,C.wood);}
-        star(0, -90 + 80 * a, 10, 25, C.gold);
+        for(const x of [-88,88]){const xx=x+Math.sign(x)*25;segment([xx,-4,10],[xx,-35-80*a,10],2,C.ivory);box(xx,-45-80*a,10,15,20,15,C.wood);}
+        star(0, -98.275+80*a, 10, 25, C.gold);
         break;
       }
       case "custom:0": {
-        cylinder(0,-140,0,85,20,C.wood);segment([0,-130,0],[0,-85,0],5,C.gold);box(-220,75,-30,32,30,35,C.dark);
+        cylinder(0,-140,0,85,20,C.wood);segment([0,-130,0],[0,-85,0],5,C.gold);box(-220,75,-30,32,30,35,C.dark);segment([-220,-144,-30],[-220,60,-30],5,C.gold);cylinder(-220,-147,-30,25,6,C.wood);
         plate(
           [
             [-90, -85],
@@ -1013,6 +1013,7 @@
         break;
       }
       case "birthday:1": {
+        box(0,-141,0,100,18,60,C.wood);segment([0,-132,0],[0,-123,0],6,C.gold);for(let j=0;j<3;j++)box(-160+j*155,-145.5,60,65,9,35,C.wood);
         torus(0, 0, 0, 110, 13, C.gold, 1, [Math.PI / 2, 0, 0]);
         cylinder(0, 0, 0, 102, 8, C.dark, 1, 102, [Math.PI / 2, 0, 0]);
         for (let j = 0; j < 12; j++) {
@@ -1136,7 +1137,7 @@
         break;
       }
       case "march:1": {
-        cylinder(0, -88, 0, 62, 120, C.ivory, 1, 31);
+        cylinder(0, -90, 0, 62, 120, C.ivory, 1, 31);
         torus(0, -25, 0, 33, 4, C.gold);
         for (let j = 0; j < 11; j++) {
           const u = j * 2.399,
@@ -1164,11 +1165,12 @@
         box(0, -58, 0, 105, 160, 65, C.blue, 0.8);
         box(0, 30, 0, 60, 18, 45, C.gold);
         cylinder(0, 50, 0, 24, 25, C.dark);
+        cylinder(0,67,0,6,10,C.gold);box(21,77,0,20,6,6,C.gold);
         sphere(0, 77, 0, 15, C.gold, 1, [1, 0.4, 1]);
         for (let j = 0; j < 16; j++) {
           const age=(clock*.4+j/16)%1,u=j*2.4;
           sphere(
-            Math.cos(u) * 95*age,
+            30+Math.cos(u)*95*age,
             80+age*85,
             Math.sin(u)*60*age,
             3,
@@ -1181,7 +1183,7 @@
         break;
       }
       case "romance:0": {
-        cylinder(0,-145,20,110,10,C.wood);segment([0,-140,20],[0,-80,20],4,C.gold);
+        cylinder(0,-145,20,110,10,C.wood);segment([0,-140,20],[0,-94,0],4,C.gold);
         torus(0, 2, 0, 88, 8, C.gold, 1, [Math.PI / 2, 0, 0]);
         cylinder(0, 2, 0, 83, 8, C.rose, 1, 83, [Math.PI / 2, 0, 0]);
         cylinder(
@@ -1235,9 +1237,9 @@
           cylinder(x,-105,0,13,46,C.ivory);
           sphere(
             x,
-            -71 + Math.sin(clock * 1.4) * 1.5,
+            -67.6+Math.sin(clock*1.4)*.6,
             0,
-            15,
+            9,
             C.orange,
             a,
             [0.45, 1.6, 0.45],
@@ -1373,7 +1375,7 @@
         for(const x of [-175,175])for(const z of [-75,75])box(x,-130,z,10,40,10,C.wood);
         box(0, -103, 0, 390, 14, 190, C.wood);
         for (let j = 0; j < 5; j++) {
-          const x=-152+j*76, R=18+j*4, lift=q(.05+j*.06,.45+j*.06), cy=(-96+R)*(1-lift)+(-8+(j%2)*25)*lift;
+          const x=-164+j*82, R=18+j*4, lift=q(.05+j*.06,.45+j*.06), cy=(-96+R)*(1-lift)+(-8+(j%2)*25)*lift;
           cylinder(x,-89,0,10,14,C.wood);
           segment([x, -94, 0], [x,cy-R,0], 2, C.gold);
           sphere(
@@ -1526,8 +1528,8 @@
         let base=-150;
         for(let j=0;j<5;j++){
           const r=55-j*7,ry=r*.28,y=base+ry,drop=0;
-          sphere(j%2?2:-2,y+drop,0,r,"#889a9e",1,[1,.28,.8],[0,j*.3,0]);
-          base=y+ry-.8;
+          sphere(0,y+drop,0,r,"#889a9e",1,[1,.28,.8],[0,j*.3,0]);
+          base=y+ry;
         }
         const drop=(clock*.3)%1;if(drop<.75)sphere(105,140-380*drop,0,2,C.blue);
         for(let j=0;j<5;j++)torus(0,-149,0,90+j*28+((clock*5)%28),1,C.blue,.13*(1-j/6));
@@ -2007,7 +2009,7 @@
           );
         }
         box(110, -103, 0, 70, 95, 70, C.dark);
-        star(110,-25,0,35,C.gold,1);
+        star(110,-27.2,0,35,C.gold,1);
         segment([-70, -135, 0], [110, -135, 0], 2, C.gold);
         break;
       }

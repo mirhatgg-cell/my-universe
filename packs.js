@@ -370,7 +370,7 @@
       SnowWorkshop.draw(s,t);return;
     }
     if (+phase === 2) {
-      PaperWorkshop.draw(s, t, topic, +pack);
+      PaperStories.draw(s,t,topic,+pack);
       return;
     }
     // Every scene has its own complete timeline from beginning to final pose.
@@ -785,7 +785,7 @@
     g.translate(s.x * 9, s.y * 6);
     // Bodies are present before an action. Hands, hinges and tools explain the force.
     function palm(x,y,c=C.cream,angle=0){g.save();g.translate(x,y);g.rotate(angle);line(0,0,36,30,c,10);ellipse(0,0,12,8,c);for(let n=0;n<3;n++)line(-8+n*5,-3,-15+n*5,-12,c,3);g.restore();}
-    function walker(x,ground,c,walk=0,reach=null){const stride=Math.sin(walk)*11;disk(x,ground-69,9,C.cream);line(x,ground-57,x,ground-30,c,13);line(x,ground-30,x-12-stride,ground,c,5);line(x,ground-30,x+12+stride,ground,c,5);line(x,ground-53,reach?reach[0]:x+19,reach?reach[1]:ground-34,c,5);line(x,ground-50,x-15,ground-34,c,4);}
+    function walker(x,ground,c,walk=0,reach=null){return MotionRig.draw(g,{x,ground,color:c,height:80,cycle:walk,walking:Math.abs(walk)>0,dir:reach&&reach[0]<x?-1:1,hands:reach?[null,reach]:undefined});}
     function watering(x,y,amount){rect(x-21,y-15,42,25,C.blue);arc(x-25,y-7,14,Math.PI/2,Math.PI*1.5,C.blue,4);line(x+15,y-8,x+58,y+5,C.blue,8);for(let j=0;j<12;j++){const u=(clock*.8+j/12)%1;disk(x+58+u*25,y+5+u*u*80,1.7,C.blue,amount*.8);}}
     function plant(x,ground,height,open=1){line(x,ground,x,ground-height,C.green,3);for(let j=0;j<4;j++){const yy=ground-height*(.25+j*.18),dir=j%2?1:-1;ellipse(x+dir*12,yy,15,5,C.green,.9,dir*.4);}for(let j=0;j<7;j++){const a=j*TAU/7;ellipse(x+Math.cos(a)*12*open,ground-height+Math.sin(a)*12*open,12,5,C.pink,1,a);}disk(x,ground-height,5,C.gold);}
     function hangingCrane(x,y,targetY){line(110,110,890,110,C.blue,6,.6);line(x,110,x,targetY-9,C.cream,2);rect(x-15,99,30,20,C.gold);arc(x,targetY-4,7,0,Math.PI,C.gold,3);}
@@ -1047,35 +1047,11 @@
         break;
       }
       case "rainwindow": {
-        const lit = q(0.3, 0.68),
-          clear = q(0.67, 1);
-        skyline(432);
-        rect(160, 95, 680, 362, C.blue, 0.07);
-        line(500, 95, 500, 457, C.cream, 6, 0.5);
-        line(160, 270, 840, 270, C.cream, 5, 0.5);
-        for (let j = 0; j < 65; j++) {
-          const d = s.dots[j],
-            x = 180 + d.s * 640,
-            y = 100 + ((d.y + clock * 35) % 335);
-          ellipse(x, y, 2.5, 7, C.blue, 0.6 * (1 - clear));
-          line(x, y, x - 3, y + 20, C.blue, 1, 0.2 * (1 - clear));
-        }
-        rect(354, 308, 22, 32, C.gold, lit);
-        rect(624, 273, 22, 32, C.gold, lit);
-        glow(365, 324, 55, C.gold, 0.32 * lit);
-        glow(635, 289, 55, C.gold, 0.32 * lit);
-        curve(
-          [
-            [365, 324],
-            [430, 240],
-            [535, 205],
-            [635, 289],
-          ],
-          C.pink,
-          1.5,
-          clear * 0.7,
-        );
-        walker(320+35*lit,340,C.pink,lit*12);walker(590+35*lit,305,C.blue,lit*12);
+        const lit=q(.15,.6);skyline(432);rect(190,170,250,285,'#343849');rect(560,145,250,310,'#3b4054');
+        // Two actual rooms: figures behind glass, with floors, lintels and sill occlusion.
+        for(let j=0;j<2;j++){const x=j?590:220,y=j?220:245,w=190,h=145;rect(x,y,w,h,'#dcc193',.65+.25*lit);g.save();g.beginPath();g.rect(x+8,y+8,w-16,h-16);g.clip();const u=q(.1+j*.12,.55+j*.12);walker(x+40+40*u,y+h-12,j?C.blue:C.pink,u*6);walker(x+145-20*u,y+h-12,j?C.pink:C.blue,-u*4);g.restore();rect(x-8,y-7,w+16,8,C.cream);rect(x-8,y+h-9,w+16,13,C.cream);line(x+w/2,y,x+w/2,y+h,C.cream,6);}
+        for(let j=0;j<55;j++){const d=s.dots[j],x=175+d.s*650,y=110+(d.y+clock*35)%350;line(x,y,x-3,y+14,C.blue,1,.35);}
+        label('Два окна. Два тёплых вечера.',500,515,22,C.cream,1);
         break;
       }
       case "cranes": {
@@ -2409,23 +2385,11 @@
         break;
       }
       case "rooftop": {
-        const night = 1,
-          talk = q(0.33, 0.73),
-          dawn = q(0.73, 1);
-        skyline(456, "#293246");
-        disk(760, 140, 28, C.cream, night * (1 - dawn));
-        glow(500, 210, 280, C.orange, 0.08 * dawn);
-        rect(255, 305, 35, 43, C.gold, talk);
-        rect(690, 266, 35, 43, C.gold, talk);
-        for (let j = 0; j < 7; j++) {
-          const a = q(0.3 + j * 0.045, 0.48 + j * 0.045),
-            x = 280 + j * 64,
-            y = 250 - Math.sin((j / 6) * Math.PI) * 80;
-          arc(x, y, 9, 0, TAU, C.blue, 1.5, a * (1 - dawn) * 0.65);
-        }
-        disk(525, 168, 37, C.gold, dawn * 0.65);
-        walker(390,330,C.pink,0,[430,280+Math.sin(clock)*5]);walker(610,330,C.blue,0,[570,280-Math.sin(clock)*5]);
-        label("Есть с кем встретить утро", 500, 520, 22, C.cream, dawn);
+        const dawn=q(.55,.95);skyline(455,'#283449');disk(760,130,28,C.cream,1-dawn);disk(520,350-160*dawn,36,C.gold);glow(500,230,270,C.orange,.08*dawn);
+        rect(250,330,500,155,'#424659');rect(235,325,530,12,C.cream);rect(245,285,12,40,C.blue);rect(743,285,12,40,C.blue);line(245,285,755,285,C.blue,3);
+        rect(425,305,150,8,C.gold);line(440,313,440,330,C.gold,3);line(560,313,560,330,C.gold,3);
+        walker(390,325,C.pink,0,[419,277+Math.sin(clock)*2]);walker(610,325,C.blue,0,[581,277-Math.sin(clock)*2]);
+        label('Разговор на крыше до рассвета',500,520,22,C.cream,1);
         break;
       }
       case "music": {
@@ -2461,7 +2425,7 @@
   function duration(id){
  if(id==='pack:newyear:2:2')return SnowWorkshop.duration;
  const [,topic,index,phase]=id.split(':');
- if(phase==='2')return PaperWorkshop.duration({dots:Array.from({length:200},(_,j)=>({r:.3+(j*37%100)/150,s:(j*61%200)/200,z:.4})),name:''},topic,+index);
+ if(phase==='2')return PaperStories.duration(topic,+index);
  return 16;
 }
   window.AnimationPacks = { names, options, select, info, draw, catalog, duration };
