@@ -192,6 +192,7 @@
       holiday: document.getElementById("holiday-input").value,
       tone: document.getElementById("tone-input").value,
       journey: select.value,
+      ...(window.GreetingStudio?.read()||{}),
     };
     if (!panel) {
       panel = document.createElement("div");
@@ -212,7 +213,7 @@
       return;
     }
     const signature =
-      ids.join("|") + "|" + document.getElementById("to-input").value;
+      ids.join("|") + "|" + document.getElementById("to-input").value + "|" + JSON.stringify(cfg.selectedScenes?.map(x=>x.title)||[]);
     if (signature === lastPreview) return;
     lastPreview = signature;
     panel.replaceChildren();previewStates=[];previewElapsed=0;previewDirty=true;
@@ -224,11 +225,11 @@
       canvas.width = 300;
       canvas.height = 180;
       canvas.setAttribute("aria-hidden", "true");
-      canvas.dataset.sceneIndex = String(j);
+      canvas.dataset.sceneIndex = id.split(":")[3];
       card.className = "pack-preview";
       style.className = "pack-style";
-      style.textContent = ["ОБЪЕМНАЯ 3D", "РИСОВАННАЯ 2D", "БУМАЖНАЯ"][j];
-      title.textContent = AnimationPacks.info(id)[0];
+      style.textContent = ["ОБЪЕМНАЯ 3D", "РИСОВАННАЯ 2D", "БУМАЖНАЯ"][+id.split(":")[3]];
+      title.textContent = cfg.customScenes&&cfg.selectedScenes[j]?.title||AnimationPacks.info(id)[0];
       card.append(canvas, style, title);
       panel.append(card);
       const g = canvas.getContext("2d");
@@ -239,6 +240,7 @@
     });
     Universe.wake();
   }
+  document.addEventListener("studio-change",updateComposition);
   document.addEventListener("letter-rendered", (e) => apply(e.detail));
   document.addEventListener("theme-preview", (e) => apply(e.detail));
   document

@@ -326,6 +326,7 @@
     ]);
   }
   function select(c) {
+    if(c.customScenes&&Array.isArray(c.selectedScenes))return c.selectedScenes.map(x=>x.id).filter(id=>window.GreetingStudio?.validId(id)).slice(0,9);
     return /^pack_[0-2]$/.test(c.journey) && catalog[key(c)]
       ? [0, 1, 2].map(
           (j) => "pack:" + key(c) + ":" + c.journey.slice(-1) + ":" + j,

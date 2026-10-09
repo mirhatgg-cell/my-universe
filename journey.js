@@ -104,7 +104,7 @@
               love: "heart",
               respect: "balance",
             }[config.scene] || "orbits";
-    if (config.message) types.splice(types.length - 1, 0, "personal");
+    if (config.message && !config.customScenes) types.splice(types.length - 1, 0, "personal");
     types.forEach((entry, i) => {
       const personal = entry === "personal",
         type = personal ? personalType : entry;
@@ -113,14 +113,17 @@
         : type.startsWith("theme:")
           ? ThemeScenes.scenes[type.slice(6)].slice(1)
           : copy[type];
+      const customIndex=types.slice(0,i).filter(x=>x.startsWith('pack:')).length;
+      const custom=config.customScenes&&type.startsWith('pack:')?config.selectedScenes[customIndex]:null;
+      if(custom){if(custom.title)sceneCopy[0]=custom.title;if(custom.text)sceneCopy[1]=custom.text;}
       const section = document.createElement("article");
       section.className = "journey-chapter";
       const eyebrow = document.createElement("p");
       eyebrow.className = "eyebrow";
       eyebrow.textContent = type.startsWith("pack:")
         ? "АНИМАЦИЯ " +
-          (Number(type.split(":")[3]) + 1) +
-          " / 3 · " +
+          (custom?customIndex+1:Number(type.split(":")[3])+1) +
+          " / " + (config.customScenes?packed.length:3) + " · " +
           ["ОБЪЕМ", "РИСУНОК", "БУМАГА"][Number(type.split(":")[3])]
         : "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
       const h = document.createElement("h2");
@@ -306,14 +309,14 @@
       const nav = document.createElement("nav");
       nav.className = "journey-nav";
       nav.setAttribute("aria-label", "Перейти к анимации");
-      for (let j = 0; j < 3; j++) {
-        const target = states.find((s) => s.type === packed[j]);
+      for (let j = 0; j < packed.length; j++) {
+        const target = states.filter(s=>s.type.startsWith("pack:"))[j];
         if (!target) continue;
         const button = document.createElement("button");
         button.type = "button";
         button.className = "secondary";
-        button.textContent = ["1 · Объем", "2 · Рисунок", "3 · Бумага"][j];
-        button.title = AnimationPacks.info(packed[j])[0];
+        button.textContent = (j+1)+" · "+["Объём","Рисунок","Бумага"][+packed[j].split(":")[3]];
+        button.title = config.customScenes&&config.selectedScenes[j].title||AnimationPacks.info(packed[j])[0];
         const subtitle=document.createElement("small");subtitle.textContent=button.title;button.append(subtitle);
         button.onclick = () =>
           target.section.scrollIntoView({

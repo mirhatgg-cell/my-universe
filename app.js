@@ -3,6 +3,7 @@
   const { occasions, tones } = window.UniverseMessages;
   const $ = (id) => document.getElementById(id);
   const author = document.body.dataset.page === "author";
+  const defaultWishes=[...document.querySelectorAll(".wish-copy li")].map(n=>n.textContent);
   let config = {},
     shareURL = "",
     hugs = 0;
@@ -14,6 +15,7 @@
     const str = (x, n) =>
       typeof x === "string" ? [...x.trim()].slice(0, n).join("") : "";
     return {
+      ...GreetingStudio.normalize(v),
       to: str(v.to, 45),
       from: str(v.from, 60),
       holiday: has(occasions, v.holiday) ? v.holiday : "just",
@@ -53,7 +55,7 @@
     return btoa(s).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
   }
   function decode(s) {
-    if (!s || s.length > 20000 || !/^[\w-]+$/.test(s))
+    if (!s || s.length > 100000 || !/^[\w-]+$/.test(s))
       throw Error("Invalid link");
     const v = normalize(
       JSON.parse(
@@ -66,6 +68,7 @@
       ),
     );
     if (!v.to || !v.from) throw Error("Missing names");
+    if(v.customScenes&&!v.selectedScenes.length)throw Error("Empty selection");
     return v;
   }
   function linkFor(v) {
@@ -202,6 +205,8 @@
       p.textContent = notes[i];
       p.dataset.scene = ["support", "dream", "warmth"][i];
     });
+    document.querySelector(".wish-copy ul")?.replaceChildren(...defaultWishes.map(text=>{const li=document.createElement("li");li.textContent=text;return li;}));
+    GreetingStudio.apply(config);
     document.title = author
       ? "Мастерская · " + config.to
       : config.to + ", это для тебя ✧";
@@ -220,6 +225,7 @@
     scrollToElement("visual-journey"),
   );
   if (author) {
+    GreetingStudio.setup();
     for (const [key, o] of Object.entries(occasions)) {
       const opt = document.createElement("option");
       opt.value = key;
@@ -339,6 +345,7 @@
       );
     });
     function fill() {
+      GreetingStudio.fill(config);
       $("holiday-input").value = config.holiday;
       $("tone-input").value = config.tone;
       updateVariants();
@@ -350,10 +357,11 @@
     function read() {
       if (!$("form").reportValidity()) return false;
       config = normalize(
-        Object.fromEntries(
+        {...Object.fromEntries(
           Object.entries(fields).map(([k, id]) => [k, $(id).value]),
-        ),
+        ),...GreetingStudio.read()},
       );
+      if(config.customScenes&&!config.selectedScenes.length){$("status").textContent="Добавь хотя бы одну анимацию или выключи самостоятельный выбор.";return false;}
       if (!config.to || !config.from) {
         $("status").textContent = "Укажи имена, а не пробелы.";
         return false;
@@ -386,7 +394,7 @@
           throw Error("Clipboard unavailable");
         await navigator.clipboard.writeText(shareURL);
         $("status").textContent =
-          "Ссылка скопирована. Отправь её " + config.to + ".";
+          "Ссылка скопирована. Отправь её " + config.to + "." + (shareURL.length>16000?" Ссылка длинная: отправь её целиком и проверь открытие после пересылки.":"");
       } catch {
         $("share-url").focus();
         $("share-url").select();
