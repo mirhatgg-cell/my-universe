@@ -82,6 +82,18 @@ if(kind==='workshop'||kind==='library'){
  if(kind==='workshop'){for(let j=0;j<4;j++){line(842+j*22,138,851+j*22,181,ink,4,.35);disk(842+j*22,133,5,accent,.5);}poly([[56,295],[106,225],[156,295]],ink,.18);poly([[73,286],[106,245],[139,286]],paper?'#eee6d8':top,.8);}
  else for(let j=0;j<6;j++){g.globalAlpha=.23;g.fillStyle=j%2?accent:ink;g.fillRect(832+j*22,140-j%3*9,17,50+j%3*9);}
 }
+// v17: atmospheric depth and small independent actions, behind the choreography.
+const outdoors=['city','haunted','garden','sea','winter','mountain','camp','quiet','pavilion'];
+if(outdoors.includes(kind)){
+ for(let n=0;n<5;n++){const x=((n*237+t*(2+n*.2)+index*71)%1250)-120,y=44+n%3*34;g.save();g.globalAlpha=paper?.12:.11;g.fillStyle=paper?'#fff9e9':accent;g.beginPath();g.ellipse(x,y,62+n*4,12,0,0,Math.PI*2);g.ellipse(x+29,y-8,37,18,0,0,Math.PI*2);g.ellipse(x-22,y-6,31,14,0,0,Math.PI*2);g.fill();g.restore();}
+ if(['city','haunted'].includes(kind))for(let j=0;j<10;j++){const x=j*112-20,y=334+(j*17%32);poly([[x,y],[x+43,y-24],[x+89,y]],paper?'#8d9695':'#1a3045',.35);}
+ if(kind==='sea'){for(let row=0;row<10;row++){const y=340+row*8,width=8+row*5;line(sunX-width+Math.sin(t+row)*5,y,sunX+width+Math.sin(t+row)*5,y,accent,2,.13);}}
+ if(!['winter','quiet','mountain'].includes(kind))for(const side of [0,1])for(let n=0;n<7;n++){const x=side?987-n*7:13+n*7,y=492+n%3*12,tipX=x+Math.sin(t*.6+n)*4,tipY=y-35-n%4*9;line(x,y,tipX,tipY,ink,1.5,.4);disk(tipX,tipY,2.7,accent,.65);}
+}else{
+ // Window light carries floating dust; there is no random flicker or flashing.
+ for(let n=0;n<28;n++){const side=n%2,x=(side?850:75)+Math.sin(n*7+t*.17)*35,y=92+(n*41+t*4)%250;disk(x,y,.7+n%3*.25,accent,.08+.1*Math.sin(n+t*.25)**2);}
+ for(const x of [18,960]){g.save();g.globalAlpha=.12;g.fillStyle=accent;g.beginPath();g.moveTo(x,30);g.quadraticCurveTo(x+14+Math.sin(t*.55)*3,220,x+8,390);g.lineTo(x+20,390);g.quadraticCurveTo(x+27,220,x+22,30);g.closePath();g.fill();g.restore();}
+}
 // Fine deterministic fibers give paper its material without an image download.
 if(paper)for(let j=0;j<190;j++){const x=j*173%1000,y=j*97%600;line(x,y,x+4+j%8,y+1,'#766953',.5,.08);}
 // Darken the edge, leave the action in the middle readable.

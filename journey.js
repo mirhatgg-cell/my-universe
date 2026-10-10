@@ -124,13 +124,14 @@
         ? "АНИМАЦИЯ " +
           (custom?customIndex+1:Number(type.split(":")[3])+1) +
           " / " + (config.customScenes?packed.length:3) + " · " +
-          ["ОБЪЕМ", "РИСУНОК", "БУМАГА"][Number(type.split(":")[3])]
+          (PersonalScenes.is(type)?"ЛИЧНАЯ ИСТОРИЯ":["ОБЪЕМ", "РИСУНОК", "БУМАГА"][Number(type.split(":")[3])])
         : "ТВОЯ ИСТОРИЯ / 0" + (i + 1);
       const h = document.createElement("h2");
       h.textContent = personal ? "От меня — тебе" : sceneCopy[0];
       const text = document.createElement("p");
       text.className = "journey-copy";
       text.textContent = personal ? config.message : sceneCopy[1];
+      if(PersonalScenes.is(type)){const w=PersonalScenes.words({personal:custom?.personal,name:config.to,sender:config.from,holiday:config.holiday,type});text.textContent=[w.line,w.name,w.memory,w.closing].filter(Boolean).join(' · ');}
       const stage = document.createElement("button");
       stage.type = "button";
       stage.className = "journey-stage";
@@ -176,6 +177,7 @@
         pulse: 0,
         opened: false,
         name: config.to || "Для тебя",
+        personal: custom?.personal||{},holiday:config.holiday,sender:config.from,
         dots: Array.from({ length: 1000 }, () => ({
           a: rand() * Math.PI * 2,
           r: Math.sqrt(rand()),
