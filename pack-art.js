@@ -394,6 +394,7 @@
     );
   }
   function volume(s, t, topic, index) {
+    if(s.captureMesh)s.sceneMeshes=[];
     const g = s.ctx,
       p = clamp(t / (topic === "memorial" ? 11 : 8)),
       q = (a, b) => ease((p - a) / (b - a)),
@@ -460,6 +461,7 @@
         const r = rotate(pt, rot);
         return group([r[0] + pos[0], r[1] + pos[1], r[2] + pos[2]]);
       });
+      if(s.captureMesh){s.sceneMeshes.push({vertices:v,indices,color,alpha});return;}
       const groupPos = group(pos);
       for (const ids of indices) {
         const pts = ids.map((i) => v[i]),
@@ -2083,6 +2085,7 @@
     }
     // Real per-pixel depth: sorting whole faces by their average depth hid parts
     // of records, tables and globes even when those parts did not intersect.
+    if(s.captureMesh)return;
     const rw = Math.max(240, Math.min(900, g.canvas.width || 800)), rh = Math.round(rw*.6);
     let buffer=s.depthBuffer;
     if(!buffer || buffer.w!==rw){
