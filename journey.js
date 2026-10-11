@@ -109,7 +109,7 @@
       const personal = entry === "personal",
         type = personal ? personalType : entry;
       const sceneCopy = type.startsWith("pack:")
-        ? AnimationPacks.info(type)
+        ? AnimationPacks.info(type, config.holiday)
         : type.startsWith("theme:")
           ? ThemeScenes.scenes[type.slice(6)].slice(1)
           : copy[type];
@@ -320,7 +320,7 @@
         button.type = "button";
         button.className = "secondary";
         button.textContent = (j+1)+" · "+["Объём","Рисунок","Бумага"][+packed[j].split(":")[3]];
-        button.title = config.customScenes&&config.selectedScenes[j].title||AnimationPacks.info(packed[j])[0];
+        button.title = config.customScenes&&config.selectedScenes[j].title||AnimationPacks.info(packed[j],config.holiday)[0];
         const subtitle=document.createElement("small");subtitle.textContent=button.title;button.append(subtitle);
         button.onclick = () =>
           target.section.scrollIntoView({
