@@ -272,7 +272,7 @@
       }
 
       stage.onclick = (event) => {
-        if(window.MemoryScenes?.owns(type)&&event?.clientX!==undefined){const r=canvas.getBoundingClientRect(),hit=MemoryScenes.hit(state,(event.clientX-r.left)/r.width*1000,(event.clientY-r.top)/r.height*600);if(hit){PhotoStudio.showPhoto(hit.src,state.personal?.memory||state.name);return;}}
+        if(window.MemoryScenes?.owns(type)&&event?.clientX!==undefined){const r=canvas.getBoundingClientRect(),hit=MemoryScenes.hit(state,(event.clientX-r.left)/r.width*1000,(event.clientY-r.top)/r.height*600);if(hit){MemoryInteraction.activate(state,(event.clientX-r.left)/r.width*1000,(event.clientY-r.top)/r.height*600);return;}}
         state.pulse = 1;
         if (type === "theme:cake") state.clicked = !state.clicked;
         else if (type.startsWith("theme:") || type.startsWith("pack:"))
@@ -306,6 +306,7 @@
         wake();
       });
       if(type.startsWith("pack:"))SceneExperience.attach(state,config,sceneCopy[0],wake,draw);
+      MemoryInteraction.bind(section,canvas,state,wake);
       states.push(state);
     });
     if (packed) {
