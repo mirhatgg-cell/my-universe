@@ -1,7 +1,7 @@
 /* Stylize every moving frame. Geometry and its time line are never replaced with an image. */
 (()=>{'use strict';let pbr=null,loadStarted=false;const raw=AnimationPacks.draw;const processed=new Set(['anime','manga','comic','manhwa','pixel','noir','blueprint','ukiyoe','watercolor','synthwave','cyberpunk','bauhaus','artdeco','stainedglass','cinematic','nouveau','solarpunk','spaceage','postcard','book','glass','aurora','editorial','memphis','collage','fantasy']);
 function draw(s,t){if(window.PersonalScenes?.is(s.type))return raw(s,t);const skin=s.skin||document.body.dataset.skin||'fantasy';if(s._unstyled)return raw(s,t);if(['realism','glass','spaceage'].includes(skin)&&s.type.endsWith(':0')){
-if(!loadStarted){loadStarted=true;import('./physical-packs.js').then(m=>{pbr=m;document.dispatchEvent(new Event('motion-change'));Universe.wake();}).catch(()=>{});}if(pbr){try{const capture={...s,captureMesh:true,_unstyled:true};raw(capture,t);pbr.draw(s,capture.sceneMeshes||[],s.ctx);s.renderTechnique='pbr-geometry';return;}catch{pbr=null;s.renderTechnique='software-fallback';}}
+if(!loadStarted&&!window.__offlineGreeting){loadStarted=true;import('./physical-packs.js').then(m=>{pbr=m;document.dispatchEvent(new Event('motion-change'));Universe.wake();}).catch(()=>{});}if(pbr){try{const capture={...s,captureMesh:true,_unstyled:true};raw(capture,t);pbr.draw(s,capture.sceneMeshes||[],s.ctx);s.renderTechnique='pbr-geometry';return;}catch{pbr=null;s.renderTechnique='software-fallback';}}
 }
 if(!processed.has(skin)){raw(s,t);return;}
 const pixel=skin==='pixel',width=pixel?250:Math.round(Math.max(240,Math.min(600,s.ctx.canvas?.width||400))/5)*5,height=width*.6;

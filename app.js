@@ -383,6 +383,7 @@
     });
     $("share").addEventListener("click", async () => {
       if (!read()) return;
+      if(config.photos.length){$("status").textContent="Для поздравления с фото нажми «Скачать поздравление с фото». Загрузи скачанный HTML на свой сайт и отправь ссылку на этот файл.";return;}
       shareURL = linkFor(config);
       const copyingURL = shareURL,
         copyingName = config.to;
@@ -401,6 +402,7 @@
         $("status").textContent = "Скопируй полную ссылку из поля вручную.";
       }
     });
+    const portable=document.createElement('button');portable.type='button';portable.className='secondary portable-greeting';portable.textContent='Скачать поздравление с фото';$('share').after(portable);portable.onclick=async()=>{if(!read())return;portable.disabled=true;$('status').textContent='Упаковываю поздравление и фотографии…';try{await PhotoStudio.portable(config);$('share-url').value=new URL(PhotoStudio.lastFilename,location.href).href;$('share-result').hidden=false;$('status').textContent='Скачан '+PhotoStudio.lastFilename+'. Отправь его файлом или загрузи в репозиторий сайта. Адрес в поле заработает после загрузки файла.';}catch(e){$('status').textContent=e.message;}finally{portable.disabled=false;}};
     $("open-preview").addEventListener("click", () => {
       if (shareURL) window.open(shareURL, "_blank", "noopener,noreferrer");
     });
@@ -419,8 +421,8 @@
   } else {
     function load() {
       try {
-        if (!location.hash.startsWith("#letter=")) throw Error("No letter");
-        config = decode(location.hash.slice(8));
+        if(window.__giftConfig)config=normalize(window.__giftConfig);
+        else {if (!location.hash.startsWith("#letter=")) throw Error("No letter");config = decode(location.hash.slice(8));}
         render();
       } catch {
         show(false);

@@ -721,8 +721,8 @@
       ellipse(x, y - r * 0.35, r * 0.24, r * 0.6, C.cream, alpha);
     }
     function boat(x, y, k = 1, alpha = 1) {
-      g.save();
-      g.translate(x, y);
+      const waterPose=WaveMotion.pose(x,clock,84*k,4);g.save();
+      g.translate(x, y+waterPose.y);g.rotate(waterPose.angle);
       g.scale(k, k);
       poly(
         [
@@ -2042,7 +2042,7 @@
           curve(
             Array.from({ length: 60 }, (_, i) => [
               100 + i * 13.5,
-              350 + j * 12 + Math.sin(i * 0.18 + clock * 0.4) * 4,
+              350 + j * 12 + WaveMotion.height(100+i*13.5,clock,4),
             ]),
             C.blue,
             1,
@@ -2059,11 +2059,11 @@
           1,
         );
         const x = 300 + 350 * launch,
-          y = 430 - 85 * horizon+Math.sin(clock*1.2)*3;
+          y = 430 - 85 * horizon;
         line(275,420,300+350*launch,430-85*horizon,C.cream,1,Math.max(0,1-launch*8));
         boat(x, y, 1 - horizon * 0.45);
         g.save();
-        g.translate(x, y);
+        const boatPose=WaveMotion.pose(x,clock,84*(1-horizon*.45),4);g.translate(x,y+boatPose.y);g.rotate(boatPose.angle);
         g.scale(1-horizon*.45,1-horizon*.45);
         poly(
           [

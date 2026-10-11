@@ -131,7 +131,7 @@
       const text = document.createElement("p");
       text.className = "journey-copy";
       text.textContent = personal ? config.message : sceneCopy[1];
-      if(PersonalScenes.is(type)){const w=PersonalScenes.words({personal:custom?.personal,name:config.to,sender:config.from,holiday:config.holiday,type});text.textContent=[w.line,w.name,w.memory,w.closing].filter(Boolean).join(' · ');}
+      if(PersonalScenes.is(type)){const w=PersonalScenes.words({personal:custom?.personal,name:config.to,sender:config.from,holiday:config.holiday,type});text.textContent=[w.line,w.name,w.memory,custom?.personal?.chapters,w.closing].filter(Boolean).join(' · ');}
       const stage = document.createElement("button");
       stage.type = "button";
       stage.className = "journey-stage";
@@ -177,7 +177,7 @@
         pulse: 0,
         opened: false,
         name: config.to || "Для тебя",
-        personal: custom?.personal||{},holiday:config.holiday,sender:config.from,
+        photos:config.photos||[],personal: custom?.personal||{},holiday:config.holiday,sender:config.from,
         dots: Array.from({ length: 1000 }, () => ({
           a: rand() * Math.PI * 2,
           r: Math.sqrt(rand()),
@@ -271,7 +271,8 @@
         }
       }
 
-      stage.onclick = () => {
+      stage.onclick = (event) => {
+        if(window.MemoryScenes?.owns(type)&&event?.clientX!==undefined){const r=canvas.getBoundingClientRect(),hit=MemoryScenes.hit(state,(event.clientX-r.left)/r.width*1000,(event.clientY-r.top)/r.height*600);if(hit){PhotoStudio.showPhoto(hit.src,state.personal?.memory||state.name);return;}}
         state.pulse = 1;
         if (type === "theme:cake") state.clicked = !state.clicked;
         else if (type.startsWith("theme:") || type.startsWith("pack:"))

@@ -1,0 +1,1 @@
+(()=>{'use strict';function height(x,t,a=12){return a*Math.sin(x*.013-t*1.4)+a*.28*Math.sin(x*.031-t*2.1);}function pose(x,t,length=90,a=12){const left=height(x-length/2,t,a),right=height(x+length/2,t,a);return {y:(left+right)/2,angle:Math.atan2(right-left,length),left,right};}window.WaveMotion={height,pose};})();
